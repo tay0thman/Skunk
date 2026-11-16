@@ -1,0 +1,18 @@
+name: skunk
+version: 1.4.1
+authors:
+- 'Tay Othman'
+description: >
+  Skunk brings project coordinate systems, datum levels and spot annotations to Rhino: internal origin, project base point and survey point with true north on its own named CPlane; parametric levels with heads, named CPlanes and attached objects; spot elevations, spot coordinates and spot slopes on surfaces, terrain meshes and edges that update when they or their host move; north arrows that follow true north; a familiar Properties palette and Type Properties. Every annotation is a native Rhino leader or dimension, so it models, prints and exports. For architectural modeling, documentation and site planning.
+url: 'https://github.com/tay0thman/Skunk'
+icon: icon.png
+keywords:
+- 'system'
+- 'coordinates'
+- 'survey'
+- 'shared'
+- 'levels'
+- 'slopes'
+- 'annotations'
+- 'documentation'
+- guid:f13025f7-108d-504b-80fb-7ff84ca963ea

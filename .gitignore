@@ -1,0 +1,33 @@
+# Local tools, editor state, and operating-system metadata
+.claude/
+.codex/
+.vs/
+.idea/
+desktop.ini
+Thumbs.db
+.DS_Store
+*.user
+*.suo
+*.bak
+*.log
+
+# Build products are distributed through GitHub Releases
+/dist/
+/ScriptEditor/build
+/ScriptEditor/shared/
+**/[Bb]in/
+**/[Oo]bj/
+*.dll
+*.rhp
+*.pdb
+*.yak
+
+# Python caches and local credentials
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+yak.yml
+yak.yaml

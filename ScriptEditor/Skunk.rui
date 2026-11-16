@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RhinoUI major_ver="5" minor_ver="0" guid="c879d7c5-a20d-50fc-9afe-ae95427fd409" localize="False" default_language_id="1033" sidebar_one="00000000-0000-0000-0000-000000000000" dpi_scale="100">
+  <extend_rhino_menus />
+  <menus />
+  <tool_bar_groups>
+    <tool_bar_group guid="c879d7c5-a20d-50fc-9afe-ae95427fd409" dock_bar_guid64="99deee96-4415-5eb3-aea8-45258eba7e0c" active_tool_bar_group="ac2091fe-7334-5ae4-b80a-169f609f237c" single_file="False" hide_single_tab="True" point_floating="0,0">
+      <text>
+        <locale_1033>Skunk</locale_1033>
+      </text>
+      <tool_bar_group_item guid="4a29b33c-d885-5cdf-b4ed-58fd96990f44" major_version="1" minor_version="1">
+        <text>
+          <locale_1033>Skunk</locale_1033>
+        </text>
+        <tool_bar_id>ac2091fe-7334-5ae4-b80a-169f609f237c</tool_bar_id>
+      </tool_bar_group_item>
+      <dock_bar_info dpi_scale="0" dock_bar="False" docking="False" horz="True" visible="True" floating="True" mru_float_style="0" bar_id="0" mru_width="0" point_pos="0,0" float_point="0,0" dock_location="top" float_size="0,0" />
+    </tool_bar_group>
+  </tool_bar_groups>
+  <tool_bars>
+    <tool_bar guid="ac2091fe-7334-5ae4-b80a-169f609f237c" bitmap_id="70d1be65-20ba-51e1-bb73-5c5ee6dcd93a">
+      <text>
+        <locale_1033>Skunk</locale_1033>
+      </text>
+      <tool_bar_item guid="aafcd0ff-4959-54dc-baca-b2f92060c773">
+        <text>
+          <locale_1033>Level</locale_1033>
+        </text>
+        <left_macro_id>8883b62f-ffe4-5fe8-be66-25ed210472c1</left_macro_id>
+        <right_macro_id>b1c40812-243c-58f9-b8a8-d74432bc0feb</right_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="c8b816b6-566c-5c5b-a1b4-f92139155f9e">
+        <text>
+          <locale_1033>Levels</locale_1033>
+        </text>
+        <left_macro_id>bf0dbb7b-ff1d-589e-8def-dfe8c5cd73aa</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="bd8b056a-dcd6-5ec5-8963-cbc089d40e07">
+        <text>
+          <locale_1033>Go To Level</locale_1033>
+        </text>
+        <left_macro_id>b929002d-b7bb-5e54-846e-45f68a930562</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="b5151b83-bfc2-52dd-97bb-fdd20531365e">
+        <text>
+          <locale_1033>Attach to Level</locale_1033>
+        </text>
+        <left_macro_id>4d38b545-838b-5912-8f46-dfd386e75abd</left_macro_id>
+        <right_macro_id>385ada50-224c-5831-836a-2c878acda871</right_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="c9abfa55-74cf-5553-bf9c-166bbac8f102" button_style="spacer" />
+      <tool_bar_item guid="3296c1e8-de8f-51d6-a001-b4d6865f39b5">
+        <text>
+          <locale_1033>Spot Elevation</locale_1033>
+        </text>
+        <left_macro_id>e76402a9-eb69-58c5-80a2-c59a63c4899e</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="1c152922-21a1-568b-98ca-7096d1a4b662">
+        <text>
+          <locale_1033>Spot Coordinate</locale_1033>
+        </text>
+        <left_macro_id>bf887309-822f-5cb3-9e7e-6017d690a804</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="d43f0ca3-1c4b-5302-9b0d-bd893b0c914d">
+        <text>
+          <locale_1033>Spot Slope</locale_1033>
+        </text>
+        <left_macro_id>5e04fd21-9b6e-5985-8572-ca54c14b1795</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="ff0d34fe-ee66-590f-bcff-c2fce1565545">
+        <text>
+          <locale_1033>North Arrow</locale_1033>
+        </text>
+        <left_macro_id>9fbfd537-63c5-55af-a376-6ed8b7584c83</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="48ec62c1-8b42-5320-a620-7eaa4e8cce67">
+        <text>
+          <locale_1033>Type Properties</locale_1033>
+        </text>
+        <left_macro_id>7af00ae2-8c82-54b5-940f-95828bd31355</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="8626453b-6e1b-55c3-af8a-dfaea1b47fbd">
+        <text>
+          <locale_1033>Properties</locale_1033>
+        </text>
+        <left_macro_id>cbf40c1c-479d-503b-bc4d-f77ee19f5bf2</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="34a9d2cb-3ff2-517d-921c-cd8eb30c2647" button_style="spacer" />
+      <tool_bar_item guid="0fb459d6-2ca9-5799-9057-5d25b4428ed3">
+        <text>
+          <locale_1033>Location</locale_1033>
+        </text>
+        <left_macro_id>7ad45ee8-0715-5bb2-8c47-037778ebc096</left_macro_id>
+        <right_macro_id>dd22fe5b-8e26-566c-ac30-506a025338c9</right_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="d92b1fc6-269e-52df-88bd-35ef636bed9a">
+        <text>
+          <locale_1033>Project Base Point</locale_1033>
+        </text>
+        <left_macro_id>dac89218-024b-5193-b427-fcf0eebfc6e9</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="c7c3c0ac-b47c-5928-8803-05fad1c11df0">
+        <text>
+          <locale_1033>Survey Point</locale_1033>
+        </text>
+        <left_macro_id>bbc04734-49a7-5c74-950f-e9ca7ba7f354</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="bfe0866e-24d6-5abb-be00-bd69aae29e8e">
+        <text>
+          <locale_1033>Specify Coordinates</locale_1033>
+        </text>
+        <left_macro_id>23a64471-0ada-58e4-b2ca-9ac0bd45783f</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="84b72d85-8d58-5f01-9ee5-74fe19f35fb8">
+        <text>
+          <locale_1033>Report Coordinates</locale_1033>
+        </text>
+        <left_macro_id>a873e093-7cb4-544c-b0e7-a24cefb5b1cd</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="517846b3-6e98-5d97-bf50-e2eeae785f03">
+        <text>
+          <locale_1033>Import Shared Coordinates</locale_1033>
+        </text>
+        <left_macro_id>e6b70d9d-0807-5a22-8b38-633c43feceec</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="eaeb9657-6fda-5159-97a2-53bdbd4ec355">
+        <text>
+          <locale_1033>Rotate True North</locale_1033>
+        </text>
+        <left_macro_id>11bb0097-335e-5b9d-a564-dfee5d51278c</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="5598870c-9eb0-53fd-b49a-64025a96affd">
+        <text>
+          <locale_1033>Rotate Project North</locale_1033>
+        </text>
+        <left_macro_id>607039ef-9180-5060-9d76-b22f60c6af08</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="b1070a1c-c50e-55bf-b0c0-4cb2617d0b8d">
+        <text>
+          <locale_1033>Update</locale_1033>
+        </text>
+        <left_macro_id>445e08a6-e71d-5033-936c-541891668c70</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="417fe119-9568-520b-8120-43fa4504f42c">
+        <text>
+          <locale_1033>Settings</locale_1033>
+        </text>
+        <left_macro_id>9f662055-f680-5996-9b27-136a83e0ea2c</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="70339151-4b95-5808-95e6-1b84040d62b1">
+        <text>
+          <locale_1033>Skunk</locale_1033>
+        </text>
+        <left_macro_id>7946266c-ea13-5f34-88d7-19448a2f22e7</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="80dc3ea5-09cd-5833-8870-4bb4e08767ba" button_style="spacer" />
+      <tool_bar_item guid="30e6636d-6514-5a78-9de9-38b433b9b458">
+        <text>
+          <locale_1033>Orientation</locale_1033>
+        </text>
+        <left_macro_id>b1ccb703-6616-5992-a2c4-04ddcc9fe905</left_macro_id>
+        <right_macro_id>9bc7ea27-11cc-5fed-8a5b-eb91013b792f</right_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="457cee11-07b9-5369-a4b1-836b57d9eac5">
+        <text>
+          <locale_1033>Site Points</locale_1033>
+        </text>
+        <left_macro_id>2dfa4827-5f9c-57f5-b213-18932e97250c</left_macro_id>
+      </tool_bar_item>
+    </tool_bar>
+  </tool_bars>
+  <macros>
+    <macro_item guid="8883b62f-ffe4-5fe8-be66-25ed210472c1" bitmap_id="373295e2-e3b7-5afe-84c6-fbabe6a8d94c">
+      <button_text>
+        <locale_1033>Level</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Level</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Level: add a datum level - pick its elevation in an elevation view or type it</locale_1033>
+      </tooltip>
+      <script>! _SkLevel</script>
+    </macro_item>
+    <macro_item guid="b1c40812-243c-58f9-b8a8-d74432bc0feb" bitmap_id="373295e2-e3b7-5afe-84c6-fbabe6a8d94c">
+      <button_text>
+        <locale_1033>Level</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Level</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Levels manager</locale_1033>
+      </tooltip>
+      <script>! _SkLevels</script>
+    </macro_item>
+    <macro_item guid="bf0dbb7b-ff1d-589e-8def-dfe8c5cd73aa" bitmap_id="10fbe2f5-3190-5c2f-b302-6cbcf2fe967a">
+      <button_text>
+        <locale_1033>Levels</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Levels</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Levels: rename levels, change elevations, add a level above, go to a level</locale_1033>
+      </tooltip>
+      <script>! _SkLevels</script>
+    </macro_item>
+    <macro_item guid="b929002d-b7bb-5e54-846e-45f68a930562" bitmap_id="4146756f-775a-57f0-bee2-4279aee11e81">
+      <button_text>
+        <locale_1033>Go To Level</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Go To Level</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Go To Level: set the CPlane to a level, with a plan view and a view range (plan cut)</locale_1033>
+      </tooltip>
+      <script>! _SkGoToLevel</script>
+    </macro_item>
+    <macro_item guid="4d38b545-838b-5912-8f46-dfd386e75abd" bitmap_id="290a5125-1b07-5f07-9feb-ba20b7b5a1ef">
+      <button_text>
+        <locale_1033>Attach to Level</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Attach to Level</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Attach to Level: objects move with the level when its elevation changes</locale_1033>
+      </tooltip>
+      <script>! _SkAttachToLevel</script>
+    </macro_item>
+    <macro_item guid="385ada50-224c-5831-836a-2c878acda871" bitmap_id="290a5125-1b07-5f07-9feb-ba20b7b5a1ef">
+      <button_text>
+        <locale_1033>Attach to Level</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Attach to Level</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Detach from Level</locale_1033>
+      </tooltip>
+      <script>! _SkDetachFromLevel</script>
+    </macro_item>
+    <macro_item guid="edb74965-fe37-59c0-9c5f-40082e3ce661" bitmap_id="dd1fd111-abf5-55d3-9b0e-707409b4f9ff">
+      <button_text>
+        <locale_1033>Detach</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Detach</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Detach from Level: objects no longer follow their level</locale_1033>
+      </tooltip>
+      <script>! _SkDetachFromLevel</script>
+    </macro_item>
+    <macro_item guid="e76402a9-eb69-58c5-80a2-c59a63c4899e" bitmap_id="116ebbc5-cd8e-57f7-93a6-e462b42ffebc">
+      <button_text>
+        <locale_1033>Spot Elevation</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Spot Elevation</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Spot Elevation: elevation of a point on a surface, polysurface, mesh, SubD, edge or curve - follows its host</locale_1033>
+      </tooltip>
+      <script>! _SkSpotElevation</script>
+    </macro_item>
+    <macro_item guid="bf887309-822f-5cb3-9e7e-6017d690a804" bitmap_id="709a26e3-b5d8-53a7-9c86-3bbd75936325">
+      <button_text>
+        <locale_1033>Spot Coordinate</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Spot Coordinate</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Spot Coordinate: north / east coordinates of a point from the project base point, survey point, internal origin or a named CPlane</locale_1033>
+      </tooltip>
+      <script>! _SkSpotCoordinate</script>
+    </macro_item>
+    <macro_item guid="5e04fd21-9b6e-5985-8572-ca54c14b1795" bitmap_id="dd540d80-35eb-58e0-93a9-709314c7ad57">
+      <button_text>
+        <locale_1033>Spot Slope</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Spot Slope</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Spot Slope: slope arrow on a surface, terrain mesh or edge; drag its end grips to set its reach, move it and it measures where it is - percent, rise / 12", 1:x, degrees ...</locale_1033>
+      </tooltip>
+      <script>! _SkSpotSlope</script>
+    </macro_item>
+    <macro_item guid="9fbfd537-63c5-55af-a376-6ed8b7584c83" bitmap_id="4806969b-687a-5a68-b2cb-9ee1ffe2778a">
+      <button_text>
+        <locale_1033>North Arrow</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>North Arrow</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>North Arrow: a north arrow that always points to true north (or project north)</locale_1033>
+      </tooltip>
+      <script>! _SkNorthArrow</script>
+    </macro_item>
+    <macro_item guid="7af00ae2-8c82-54b5-940f-95828bd31355" bitmap_id="699279d7-994a-5200-8fcc-ebe73e271cc3">
+      <button_text>
+        <locale_1033>Type Properties</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Type Properties</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Type Properties: edit the type of the selected Skunk element (Edit Type)</locale_1033>
+      </tooltip>
+      <script>! _SkEditType</script>
+    </macro_item>
+    <macro_item guid="cbf40c1c-479d-503b-bc4d-f77ee19f5bf2" bitmap_id="120ba932-600e-54e3-8367-fcab83b3c129">
+      <button_text>
+        <locale_1033>Properties</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Properties</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Properties: the Properties palette for Skunk elements (toggle)</locale_1033>
+      </tooltip>
+      <script>! _SkProperties</script>
+    </macro_item>
+    <macro_item guid="7ad45ee8-0715-5bb2-8c47-037778ebc096" bitmap_id="03052454-c8bb-55ef-9e23-1f620dbfbf43">
+      <button_text>
+        <locale_1033>Location</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Location</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Location: project base point, survey point, angle to true north and their named CPlanes</locale_1033>
+      </tooltip>
+      <script>! _SkLocation</script>
+    </macro_item>
+    <macro_item guid="dd22fe5b-8e26-566c-ac30-506a025338c9" bitmap_id="03052454-c8bb-55ef-9e23-1f620dbfbf43">
+      <button_text>
+        <locale_1033>Location</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Location</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Print the location on the command line</locale_1033>
+      </tooltip>
+      <script>! _-SkLocation</script>
+    </macro_item>
+    <macro_item guid="dac89218-024b-5193-b427-fcf0eebfc6e9" bitmap_id="f46100b1-00de-5a0d-be69-06722e8d107a">
+      <button_text>
+        <locale_1033>Project Base Point</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Project Base Point</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Project Base Point: move it (the model stays) or type its shared coordinates and angle to true north</locale_1033>
+      </tooltip>
+      <script>! _SkProjectBasePoint</script>
+    </macro_item>
+    <macro_item guid="bbc04734-49a7-5c74-950f-e9ca7ba7f354" bitmap_id="554f1499-b9f5-5e74-b6d2-e04dd15c51c4">
+      <button_text>
+        <locale_1033>Survey Point</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Survey Point</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Survey Point: move it clipped (the shared system moves) or unclipped, or type its values</locale_1033>
+      </tooltip>
+      <script>! _SkSurveyPoint</script>
+    </macro_item>
+    <macro_item guid="23a64471-0ada-58e4-b2ca-9ac0bd45783f" bitmap_id="dc07a823-cd7e-5ddf-8b80-54a2ecaf3178">
+      <button_text>
+        <locale_1033>Specify Coordinates</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Specify Coordinates</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Specify Coordinates at Point: give a picked point its shared coordinates and true north</locale_1033>
+      </tooltip>
+      <script>! _SkSpecifyCoordinates</script>
+    </macro_item>
+    <macro_item guid="a873e093-7cb4-544c-b0e7-a24cefb5b1cd" bitmap_id="a3396968-d49f-53af-a0b4-3746d3b84e8d">
+      <button_text>
+        <locale_1033>Report Coordinates</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Report Coordinates</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Report Shared Coordinates: shared, project and internal coordinates of picked points</locale_1033>
+      </tooltip>
+      <script>! _SkReportCoordinates</script>
+    </macro_item>
+    <macro_item guid="e6b70d9d-0807-5a22-8b38-633c43feceec" bitmap_id="2c36cbdd-b68e-5ae8-8487-89c600f7ed08">
+      <button_text>
+        <locale_1033>Import Shared Coordinates</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Import Shared Coordinates</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Import Shared Coordinates: match a BIM model's shared coordinates - run the Python snippet in its console, paste the result back</locale_1033>
+      </tooltip>
+      <script>! _SkImportSharedCoordinates</script>
+    </macro_item>
+    <macro_item guid="11bb0097-335e-5b9d-a564-dfee5d51278c" bitmap_id="e6f35871-e31a-50dc-b78a-df46572dee02">
+      <button_text>
+        <locale_1033>Rotate True North</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Rotate True North</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Rotate True North: turn the shared coordinate system about the project base point or survey point - the model stays</locale_1033>
+      </tooltip>
+      <script>! _SkRotateTrueNorth</script>
+    </macro_item>
+    <macro_item guid="607039ef-9180-5060-9d76-b22f60c6af08" bitmap_id="94d725f8-b8a6-58bd-83f0-da8b98df7040">
+      <button_text>
+        <locale_1033>Rotate Project North</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Rotate Project North</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Rotate Project North: rotate the model (90 degrees, 180, an angle, or align to a line); shared coordinates stay</locale_1033>
+      </tooltip>
+      <script>! _SkRotateProjectNorth</script>
+    </macro_item>
+    <macro_item guid="445e08a6-e71d-5033-936c-541891668c70" bitmap_id="e8d25286-8cd5-5ab6-aa7d-41b25ad29fbb">
+      <button_text>
+        <locale_1033>Update</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Update</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Update: re-sync every level, spot and north arrow with its host and the coordinate systems</locale_1033>
+      </tooltip>
+      <script>! _SkUpdate</script>
+    </macro_item>
+    <macro_item guid="9f662055-f680-5996-9b27-136a83e0ea2c" bitmap_id="ff4bf669-03e7-5b89-b057-e1bd5559887b">
+      <button_text>
+        <locale_1033>Settings</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Settings</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Settings: annotation scale (view scale), plan cut, keyboard aliases, start with Rhino</locale_1033>
+      </tooltip>
+      <script>! _SkSettings</script>
+    </macro_item>
+    <macro_item guid="7946266c-ea13-5f34-88d7-19448a2f22e7" bitmap_id="09ab83a6-73c9-5e2a-b9a5-adae0f596b29">
+      <button_text>
+        <locale_1033>Skunk</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Skunk</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Skunk: load Skunk, start live updates and show the Skunk toolbar (add Skunk to Rhino's startup commands)</locale_1033>
+      </tooltip>
+      <script>! _Skunk</script>
+    </macro_item>
+    <macro_item guid="b1ccb703-6616-5992-a2c4-04ddcc9fe905" bitmap_id="8792aee1-5875-56d8-8f00-efb4737bb5f3">
+      <button_text>
+        <locale_1033>Orientation</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Orientation</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Orientation: turn the plan view so true north points up</locale_1033>
+      </tooltip>
+      <script>! _SkOrientView _Orientation=TrueNorth _Enter</script>
+    </macro_item>
+    <macro_item guid="9bc7ea27-11cc-5fed-8a5b-eb91013b792f" bitmap_id="8792aee1-5875-56d8-8f00-efb4737bb5f3">
+      <button_text>
+        <locale_1033>Orientation</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Orientation</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Turn the plan view so project north points up</locale_1033>
+      </tooltip>
+      <script>! _SkOrientView _Orientation=ProjectNorth _Enter</script>
+    </macro_item>
+    <macro_item guid="2dfa4827-5f9c-57f5-b213-18932e97250c" bitmap_id="88676b4d-6976-5584-873c-0fe694fb02a2">
+      <button_text>
+        <locale_1033>Site Points</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Site Points</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Show / hide the internal origin, project base point and survey point</locale_1033>
+      </tooltip>
+      <script>! _SkShowSite</script>
+    </macro_item>
+  </macros>
+  <icons>
+    <icon guid="70d1be65-20ba-51e1-bb73-5c5ee6dcd93a">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14.6 15.6 C20.5 15.6 23.4 10.5 22 6.4 C20.9 3.1 17 1.6 14.4 3.2 C12.6 4.3 12.9 6.6 14.9 7.1 C17.4 7.7 18.3 10.2 16.4 12.3 C15.5 13.3 14.4 13.9 13.6 14.2 Z" fill="#4F0329"/><ellipse cx="9.4" cy="16" rx="6.8" ry="4.3" fill="#4F0329"/><path d="M3.6 13.2 C2.2 13.6 1.2 15 1.4 16.3 C1.6 17.4 2.9 17.9 4.4 17.6 Z" fill="#4F0329"/><circle cx="4.6" cy="14.9" r="2.6" fill="#4F0329"/><rect x="5.6" y="18.8" width="2" height="3" rx="0.8" fill="#4F0329"/><rect x="12" y="18.8" width="2" height="3" rx="0.8" fill="#4F0329"/><path d="M4.4 12.6 C8 11.2 12.4 11.7 15 13.2 C17.6 11.6 19.7 9 19.4 6.2" fill="none" stroke="#FFF6EE" stroke-width="1.5" stroke-linecap="round"/><circle cx="3.5" cy="14.4" r="0.6" fill="#FFF6EE"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14.6 15.6 C20.5 15.6 23.4 10.5 22 6.4 C20.9 3.1 17 1.6 14.4 3.2 C12.6 4.3 12.9 6.6 14.9 7.1 C17.4 7.7 18.3 10.2 16.4 12.3 C15.5 13.3 14.4 13.9 13.6 14.2 Z" fill="#BBEAFF"/><ellipse cx="9.4" cy="16" rx="6.8" ry="4.3" fill="#BBEAFF"/><path d="M3.6 13.2 C2.2 13.6 1.2 15 1.4 16.3 C1.6 17.4 2.9 17.9 4.4 17.6 Z" fill="#BBEAFF"/><circle cx="4.6" cy="14.9" r="2.6" fill="#BBEAFF"/><rect x="5.6" y="18.8" width="2" height="3" rx="0.8" fill="#BBEAFF"/><rect x="12" y="18.8" width="2" height="3" rx="0.8" fill="#BBEAFF"/><path d="M4.4 12.6 C8 11.2 12.4 11.7 15 13.2 C17.6 11.6 19.7 9 19.4 6.2" fill="none" stroke="#4F0329" stroke-width="1.5" stroke-linecap="round"/><circle cx="3.5" cy="14.4" r="0.6" fill="#4F0329"/></svg>
+      </dark>
+    </icon>
+    <icon guid="373295e2-e3b7-5afe-84c6-fbabe6a8d94c">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="1.5" y1="14" x2="13.2" y2="14" stroke="#4F0329" stroke-width="1.5" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="18" cy="14" r="4.2" fill="none" stroke="#4F0329" stroke-width="1.3"/><path d="M18 14 L18 9.8 A4.2 4.2 0 0 1 22.2 14 Z" fill="#4F0329"/><path d="M18 14 L18 18.2 A4.2 4.2 0 0 1 13.8 14 Z" fill="#4F0329"/><rect x="2" y="6.5" width="9" height="2.2" rx="1.1" fill="#4F0329"/><rect x="2" y="17" width="6" height="1.8" rx="0.9" fill="#C1B0A3" stroke="#4F0329" stroke-width="0.5"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="1.5" y1="14" x2="13.2" y2="14" stroke="#BBEAFF" stroke-width="1.5" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="18" cy="14" r="4.2" fill="none" stroke="#BBEAFF" stroke-width="1.3"/><path d="M18 14 L18 9.8 A4.2 4.2 0 0 1 22.2 14 Z" fill="#BBEAFF"/><path d="M18 14 L18 18.2 A4.2 4.2 0 0 1 13.8 14 Z" fill="#BBEAFF"/><rect x="2" y="6.5" width="9" height="2.2" rx="1.1" fill="#BBEAFF"/><rect x="2" y="17" width="6" height="1.8" rx="0.9" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.5"/></svg>
+      </dark>
+    </icon>
+    <icon guid="10fbe2f5-3190-5c2f-b302-6cbcf2fe967a">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="1.5" y1="4.5" x2="15.5" y2="4.5" stroke="#4F0329" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="4.5" r="2.9" fill="none" stroke="#4F0329" stroke-width="1.1"/><path d="M19.5 4.5 L19.5 1.6 A2.9 2.9 0 0 1 22.4 4.5 Z" fill="#4F0329"/><path d="M19.5 4.5 L19.5 7.4 A2.9 2.9 0 0 1 16.6 4.5 Z" fill="#4F0329"/><line x1="1.5" y1="12" x2="15.5" y2="12" stroke="#4F0329" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="12" r="2.9" fill="none" stroke="#4F0329" stroke-width="1.1"/><path d="M19.5 12 L19.5 9.1 A2.9 2.9 0 0 1 22.4 12 Z" fill="#4F0329"/><path d="M19.5 12 L19.5 14.9 A2.9 2.9 0 0 1 16.6 12 Z" fill="#4F0329"/><line x1="1.5" y1="19.5" x2="15.5" y2="19.5" stroke="#4F0329" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="19.5" r="2.9" fill="none" stroke="#4F0329" stroke-width="1.1"/><path d="M19.5 19.5 L19.5 16.6 A2.9 2.9 0 0 1 22.4 19.5 Z" fill="#4F0329"/><path d="M19.5 19.5 L19.5 22.4 A2.9 2.9 0 0 1 16.6 19.5 Z" fill="#4F0329"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="1.5" y1="4.5" x2="15.5" y2="4.5" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="4.5" r="2.9" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.5 4.5 L19.5 1.6 A2.9 2.9 0 0 1 22.4 4.5 Z" fill="#BBEAFF"/><path d="M19.5 4.5 L19.5 7.4 A2.9 2.9 0 0 1 16.6 4.5 Z" fill="#BBEAFF"/><line x1="1.5" y1="12" x2="15.5" y2="12" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="12" r="2.9" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.5 12 L19.5 9.1 A2.9 2.9 0 0 1 22.4 12 Z" fill="#BBEAFF"/><path d="M19.5 12 L19.5 14.9 A2.9 2.9 0 0 1 16.6 12 Z" fill="#BBEAFF"/><line x1="1.5" y1="19.5" x2="15.5" y2="19.5" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="19.5" r="2.9" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.5 19.5 L19.5 16.6 A2.9 2.9 0 0 1 22.4 19.5 Z" fill="#BBEAFF"/><path d="M19.5 19.5 L19.5 22.4 A2.9 2.9 0 0 1 16.6 19.5 Z" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="4146756f-775a-57f0-bee2-4279aee11e81">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2 19 L14 19 L22 13.5 L10 13.5 Z" fill="#C1B0A3" stroke="#4F0329" stroke-width="0.9"/><path d="M6 16.25 L18 16.25 M8 13.5 L4 19 M14 13.5 L10 19 M20 13.5 L16 19" stroke="#4F0329" stroke-width="0.5"/><line x1="12" y1="2" x2="12" y2="11" stroke="#4F0329" stroke-width="1.8"/><path d="M12.00 13.00 L9.80 9.00 L14.20 9.00 Z" fill="#4F0329"/><circle cx="19.5" cy="5" r="2.6" fill="none" stroke="#4F0329" stroke-width="1.1"/><path d="M19.5 5 L19.5 2.4 A2.6 2.6 0 0 1 22.1 5 Z" fill="#4F0329"/><path d="M19.5 5 L19.5 7.6 A2.6 2.6 0 0 1 16.9 5 Z" fill="#4F0329"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2 19 L14 19 L22 13.5 L10 13.5 Z" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.9"/><path d="M6 16.25 L18 16.25 M8 13.5 L4 19 M14 13.5 L10 19 M20 13.5 L16 19" stroke="#BBEAFF" stroke-width="0.5"/><line x1="12" y1="2" x2="12" y2="11" stroke="#BBEAFF" stroke-width="1.8"/><path d="M12.00 13.00 L9.80 9.00 L14.20 9.00 Z" fill="#BBEAFF"/><circle cx="19.5" cy="5" r="2.6" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.5 5 L19.5 2.4 A2.6 2.6 0 0 1 22.1 5 Z" fill="#BBEAFF"/><path d="M19.5 5 L19.5 7.6 A2.6 2.6 0 0 1 16.9 5 Z" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="290a5125-1b07-5f07-9feb-ba20b7b5a1ef">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="5" y="3.5" width="10" height="8" fill="#C1B0A3" stroke="#4F0329" stroke-width="1"/><path d="M8 11.5 V17.5 M12 11.5 V17.5" stroke="#4F0329" stroke-width="1.6"/><line x1="1.5" y1="18.5" x2="15.5" y2="18.5" stroke="#4F0329" stroke-width="1.5" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="18.5" r="3" fill="none" stroke="#4F0329" stroke-width="1.1"/><path d="M19.5 18.5 L19.5 15.5 A3 3 0 0 1 22.5 18.5 Z" fill="#4F0329"/><path d="M19.5 18.5 L19.5 21.5 A3 3 0 0 1 16.5 18.5 Z" fill="#4F0329"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="5" y="3.5" width="10" height="8" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="1"/><path d="M8 11.5 V17.5 M12 11.5 V17.5" stroke="#BBEAFF" stroke-width="1.6"/><line x1="1.5" y1="18.5" x2="15.5" y2="18.5" stroke="#BBEAFF" stroke-width="1.5" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="18.5" r="3" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.5 18.5 L19.5 15.5 A3 3 0 0 1 22.5 18.5 Z" fill="#BBEAFF"/><path d="M19.5 18.5 L19.5 21.5 A3 3 0 0 1 16.5 18.5 Z" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="dd1fd111-abf5-55d3-9b0e-707409b4f9ff">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="5" y="2.5" width="10" height="8" fill="#C1B0A3" stroke="#4F0329" stroke-width="1"/><path d="M8 10.5 V12.6 M12 10.5 V12.6 M8 15.4 V17.5 M12 15.4 V17.5" stroke="#4F0329" stroke-width="1.6"/><path d="M5.5 15.8 L14.5 12.2" stroke="#4F0329" stroke-width="1.4"/><line x1="1.5" y1="18.5" x2="15.5" y2="18.5" stroke="#4F0329" stroke-width="1.5" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="18.5" r="3" fill="none" stroke="#4F0329" stroke-width="1.1"/><path d="M19.5 18.5 L19.5 15.5 A3 3 0 0 1 22.5 18.5 Z" fill="#4F0329"/><path d="M19.5 18.5 L19.5 21.5 A3 3 0 0 1 16.5 18.5 Z" fill="#4F0329"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="5" y="2.5" width="10" height="8" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="1"/><path d="M8 10.5 V12.6 M12 10.5 V12.6 M8 15.4 V17.5 M12 15.4 V17.5" stroke="#BBEAFF" stroke-width="1.6"/><path d="M5.5 15.8 L14.5 12.2" stroke="#BBEAFF" stroke-width="1.4"/><line x1="1.5" y1="18.5" x2="15.5" y2="18.5" stroke="#BBEAFF" stroke-width="1.5" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="18.5" r="3" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.5 18.5 L19.5 15.5 A3 3 0 0 1 22.5 18.5 Z" fill="#BBEAFF"/><path d="M19.5 18.5 L19.5 21.5 A3 3 0 0 1 16.5 18.5 Z" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="116ebbc5-cd8e-57f7-93a6-e462b42ffebc">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M1.5 20.5 L22.5 15 L22.5 22.5 L1.5 22.5 Z" fill="#C1B0A3" stroke="#344217" stroke-width="0.9"/><circle cx="7.5" cy="18.9" r="3" fill="none" stroke="#344217" stroke-width="1.1"/><path d="M7.5 18.9 L7.5 15.899999999999999 A3 3 0 0 1 10.5 18.9 Z" fill="#344217"/><path d="M7.5 18.9 L7.5 21.9 A3 3 0 0 1 4.5 18.9 Z" fill="#344217"/><path d="M9.6 16.8 L14 9.5 L22.5 9.5" fill="none" stroke="#344217" stroke-width="1.3"/><text x="18.2" y="7.6" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="7" font-weight="700" fill="#344217" text-anchor="middle">EL</text></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M1.5 20.5 L22.5 15 L22.5 22.5 L1.5 22.5 Z" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.9"/><circle cx="7.5" cy="18.9" r="3" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M7.5 18.9 L7.5 15.899999999999999 A3 3 0 0 1 10.5 18.9 Z" fill="#BBEAFF"/><path d="M7.5 18.9 L7.5 21.9 A3 3 0 0 1 4.5 18.9 Z" fill="#BBEAFF"/><path d="M9.6 16.8 L14 9.5 L22.5 9.5" fill="none" stroke="#BBEAFF" stroke-width="1.3"/><text x="18.2" y="7.6" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="7" font-weight="700" fill="#BBEAFF" text-anchor="middle">EL</text></svg>
+      </dark>
+    </icon>
+    <icon guid="709a26e3-b5d8-53a7-9c86-3bbd75936325">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="6.5" cy="17" r="3.4" fill="none" stroke="#344217" stroke-width="1.2"/><line x1="3.1" y1="17" x2="9.9" y2="17" stroke="#344217" stroke-width="1"/><line x1="6.5" y1="13.6" x2="6.5" y2="20.4" stroke="#344217" stroke-width="1"/><path d="M8.9 14.6 L13 9 L22.5 9" fill="none" stroke="#344217" stroke-width="1.3"/><text x="17.8" y="7.2" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="6.5" font-weight="700" fill="#344217" text-anchor="middle">N</text><text x="17.8" y="15.8" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="6.5" font-weight="700" fill="#344217" text-anchor="middle">E</text></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="6.5" cy="17" r="3.4" fill="none" stroke="#BBEAFF" stroke-width="1.2"/><line x1="3.1" y1="17" x2="9.9" y2="17" stroke="#BBEAFF" stroke-width="1"/><line x1="6.5" y1="13.6" x2="6.5" y2="20.4" stroke="#BBEAFF" stroke-width="1"/><path d="M8.9 14.6 L13 9 L22.5 9" fill="none" stroke="#BBEAFF" stroke-width="1.3"/><text x="17.8" y="7.2" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="6.5" font-weight="700" fill="#BBEAFF" text-anchor="middle">N</text><text x="17.8" y="15.8" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="6.5" font-weight="700" fill="#BBEAFF" text-anchor="middle">E</text></svg>
+      </dark>
+    </icon>
+    <icon guid="dd540d80-35eb-58e0-93a9-709314c7ad57">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M1.5 19.5 L22.5 11 L22.5 22.5 L1.5 22.5 Z" fill="#C1B0A3" stroke="#344217" stroke-width="0.9"/><line x1="19.5" y1="7.6" x2="6.8" y2="12.8" stroke="#344217" stroke-width="1.5"/><path d="M4.20 13.85 L6.78 10.65 L8.28 14.32 Z" fill="#344217"/><text x="14.5" y="7.4" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="7.5" font-weight="700" fill="#344217" text-anchor="middle">%</text></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M1.5 19.5 L22.5 11 L22.5 22.5 L1.5 22.5 Z" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.9"/><line x1="19.5" y1="7.6" x2="6.8" y2="12.8" stroke="#BBEAFF" stroke-width="1.5"/><path d="M4.20 13.85 L6.78 10.65 L8.28 14.32 Z" fill="#BBEAFF"/><text x="14.5" y="7.4" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="7.5" font-weight="700" fill="#BBEAFF" text-anchor="middle">%</text></svg>
+      </dark>
+    </icon>
+    <icon guid="4806969b-687a-5a68-b2cb-9ee1ffe2778a">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8.4" fill="none" stroke="#344217" stroke-width="1.4"/><path d="M12 6.4 L7.8 20 L12 16.9 Z" fill="#344217"/><path d="M12 6.4 L16.2 20 L12 16.9 Z" fill="none" stroke="#344217" stroke-width="1.1" stroke-linejoin="round"/><text x="12" y="4.9" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.8" font-weight="700" fill="#344217" text-anchor="middle">N</text></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8.4" fill="none" stroke="#BBEAFF" stroke-width="1.4"/><path d="M12 6.4 L7.8 20 L12 16.9 Z" fill="#BBEAFF"/><path d="M12 6.4 L16.2 20 L12 16.9 Z" fill="none" stroke="#BBEAFF" stroke-width="1.1" stroke-linejoin="round"/><text x="12" y="4.9" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.8" font-weight="700" fill="#BBEAFF" text-anchor="middle">N</text></svg>
+      </dark>
+    </icon>
+    <icon guid="699279d7-994a-5200-8fcc-ebe73e271cc3">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="2.5" width="13" height="18" rx="1" fill="none" stroke="#344217" stroke-width="1.4"/><line x1="5.5" y1="7" x2="13.5" y2="7" stroke="#344217" stroke-width="1.2"/><line x1="5.5" y1="10" x2="13.5" y2="10" stroke="#344217" stroke-width="1.2"/><line x1="5.5" y1="13" x2="13.5" y2="13" stroke="#344217" stroke-width="1.2"/><line x1="5.5" y1="16" x2="13.5" y2="16" stroke="#344217" stroke-width="1.2"/><path d="M12.5 21.5 L13.2 18.3 L20.2 11.3 L22.7 13.8 L15.7 20.8 Z" fill="#C1B0A3" stroke="#344217" stroke-width="0.9" stroke-linejoin="round"/><path d="M12.5 21.5 L13.2 18.3 L15.7 20.8 Z" fill="#344217"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="2.5" width="13" height="18" rx="1" fill="none" stroke="#BBEAFF" stroke-width="1.4"/><line x1="5.5" y1="7" x2="13.5" y2="7" stroke="#BBEAFF" stroke-width="1.2"/><line x1="5.5" y1="10" x2="13.5" y2="10" stroke="#BBEAFF" stroke-width="1.2"/><line x1="5.5" y1="13" x2="13.5" y2="13" stroke="#BBEAFF" stroke-width="1.2"/><line x1="5.5" y1="16" x2="13.5" y2="16" stroke="#BBEAFF" stroke-width="1.2"/><path d="M12.5 21.5 L13.2 18.3 L20.2 11.3 L22.7 13.8 L15.7 20.8 Z" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.9" stroke-linejoin="round"/><path d="M12.5 21.5 L13.2 18.3 L15.7 20.8 Z" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="120ba932-600e-54e3-8367-fcab83b3c129">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="1.2" fill="none" stroke="#344217" stroke-width="1.4"/><rect x="2.5" y="2.5" width="19" height="4.2" rx="1.2" fill="#344217"/><line x1="5" y1="10" x2="10" y2="10" stroke="#344217" stroke-width="1.2"/><rect x="12" y="8.7" width="7" height="2.6" fill="#C1B0A3" stroke="#344217" stroke-width="0.6"/><line x1="5" y1="13.5" x2="10" y2="13.5" stroke="#344217" stroke-width="1.2"/><rect x="12" y="12.2" width="7" height="2.6" fill="#C1B0A3" stroke="#344217" stroke-width="0.6"/><line x1="5" y1="17" x2="10" y2="17" stroke="#344217" stroke-width="1.2"/><rect x="12" y="15.7" width="7" height="2.6" fill="#C1B0A3" stroke="#344217" stroke-width="0.6"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="1.2" fill="none" stroke="#BBEAFF" stroke-width="1.4"/><rect x="2.5" y="2.5" width="19" height="4.2" rx="1.2" fill="#BBEAFF"/><line x1="5" y1="10" x2="10" y2="10" stroke="#BBEAFF" stroke-width="1.2"/><rect x="12" y="8.7" width="7" height="2.6" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.6"/><line x1="5" y1="13.5" x2="10" y2="13.5" stroke="#BBEAFF" stroke-width="1.2"/><rect x="12" y="12.2" width="7" height="2.6" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.6"/><line x1="5" y1="17" x2="10" y2="17" stroke="#BBEAFF" stroke-width="1.2"/><rect x="12" y="15.7" width="7" height="2.6" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.6"/></svg>
+      </dark>
+    </icon>
+    <icon guid="03052454-c8bb-55ef-9e23-1f620dbfbf43">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><ellipse cx="12" cy="19.5" rx="8.5" ry="2.6" fill="#C1B0A3" stroke="#493825" stroke-width="0.8"/><path d="M12 19 C8.5 14.2 6 11.4 6 8.2 A6 6 0 0 1 18 8.2 C18 11.4 15.5 14.2 12 19 Z" fill="#493825"/><circle cx="12" cy="8.3" r="2.4" fill="#FFFFFF"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><ellipse cx="12" cy="19.5" rx="8.5" ry="2.6" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.8"/><path d="M12 19 C8.5 14.2 6 11.4 6 8.2 A6 6 0 0 1 18 8.2 C18 11.4 15.5 14.2 12 19 Z" fill="#BBEAFF"/><circle cx="12" cy="8.3" r="2.4" fill="#2B2B2B"/></svg>
+      </dark>
+    </icon>
+    <icon guid="f46100b1-00de-5a0d-be69-06722e8d107a">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="#493825" stroke-width="1.8"/><path d="M6.3 6.3 L17.7 17.7 M17.7 6.3 L6.3 17.7" stroke="#493825" stroke-width="1.6"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="#BBEAFF" stroke-width="1.8"/><path d="M6.3 6.3 L17.7 17.7 M17.7 6.3 L6.3 17.7" stroke="#BBEAFF" stroke-width="1.6"/></svg>
+      </dark>
+    </icon>
+    <icon guid="554f1499-b9f5-5e74-b6d2-e04dd15c51c4">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.8 L21.6 19.6 L2.4 19.6 Z" fill="none" stroke="#493825" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9 V17.5 M7.8 13.6 H16.2" stroke="#493825" stroke-width="1.2"/><circle cx="12" cy="13.6" r="1.4" fill="#493825"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.8 L21.6 19.6 L2.4 19.6 Z" fill="none" stroke="#BBEAFF" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9 V17.5 M7.8 13.6 H16.2" stroke="#BBEAFF" stroke-width="1.2"/><circle cx="12" cy="13.6" r="1.4" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="dc07a823-cd7e-5ddf-8b80-54a2ecaf3178">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M3 3 V21 H21" fill="none" stroke="#493825" stroke-width="1"/><path d="M3 11 H9.5 M11 21 V14.5" stroke="#493825" stroke-width="0.8" stroke-dasharray="1.5 1.2"/><circle cx="11" cy="11" r="3.2" fill="none" stroke="#493825" stroke-width="1.4"/><path d="M11 6.2 V15.8 M6.2 11 H15.8" stroke="#493825" stroke-width="1.1"/><path d="M14.5 21.5 L15 19 L20.5 13.5 L22.5 15.5 L17 21 Z" fill="#C1B0A3" stroke="#493825" stroke-width="0.8"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M3 3 V21 H21" fill="none" stroke="#BBEAFF" stroke-width="1"/><path d="M3 11 H9.5 M11 21 V14.5" stroke="#BBEAFF" stroke-width="0.8" stroke-dasharray="1.5 1.2"/><circle cx="11" cy="11" r="3.2" fill="none" stroke="#BBEAFF" stroke-width="1.4"/><path d="M11 6.2 V15.8 M6.2 11 H15.8" stroke="#BBEAFF" stroke-width="1.1"/><path d="M14.5 21.5 L15 19 L20.5 13.5 L22.5 15.5 L17 21 Z" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.8"/></svg>
+      </dark>
+    </icon>
+    <icon guid="a3396968-d49f-53af-a0b4-3746d3b84e8d">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="6.5" cy="17" r="3" fill="none" stroke="#493825" stroke-width="1.3"/><path d="M6.5 12.8 V21.2 M2.3 17 H10.7" stroke="#493825" stroke-width="1"/><path d="M8.7 14.6 L11.5 11" stroke="#493825" stroke-width="1.2"/><rect x="10" y="2.5" width="12" height="9" rx="1" fill="#C1B0A3" stroke="#493825" stroke-width="0.9"/><path d="M12 5.4 H20 M12 8.4 H18" stroke="#493825" stroke-width="1.3"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="6.5" cy="17" r="3" fill="none" stroke="#BBEAFF" stroke-width="1.3"/><path d="M6.5 12.8 V21.2 M2.3 17 H10.7" stroke="#BBEAFF" stroke-width="1"/><path d="M8.7 14.6 L11.5 11" stroke="#BBEAFF" stroke-width="1.2"/><rect x="10" y="2.5" width="12" height="9" rx="1" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.9"/><path d="M12 5.4 H20 M12 8.4 H18" stroke="#BBEAFF" stroke-width="1.3"/></svg>
+      </dark>
+    </icon>
+    <icon guid="2c36cbdd-b68e-5ae8-8487-89c600f7ed08">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="11" height="8.5" rx="1" fill="#C1B0A3" stroke="#493825" stroke-width="0.9"/><path d="M4.6 5.4 H11.4 M4.6 8.3 H9.6" stroke="#493825" stroke-width="1.3"/><path d="M7 11.5 V16.5 H11.2" fill="none" stroke="#493825" stroke-width="1.5"/><path d="M13.60 16.50 L10.20 18.37 L10.20 14.63 Z" fill="#493825"/><path d="M18 9.5 L22.5 20.5 L13.5 20.5 Z" fill="none" stroke="#493825" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 13.2 V19.2 M15.7 16.9 H20.3" stroke="#493825" stroke-width="1"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="11" height="8.5" rx="1" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.9"/><path d="M4.6 5.4 H11.4 M4.6 8.3 H9.6" stroke="#BBEAFF" stroke-width="1.3"/><path d="M7 11.5 V16.5 H11.2" fill="none" stroke="#BBEAFF" stroke-width="1.5"/><path d="M13.60 16.50 L10.20 18.37 L10.20 14.63 Z" fill="#BBEAFF"/><path d="M18 9.5 L22.5 20.5 L13.5 20.5 Z" fill="none" stroke="#BBEAFF" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 13.2 V19.2 M15.7 16.9 H20.3" stroke="#BBEAFF" stroke-width="1"/></svg>
+      </dark>
+    </icon>
+    <icon guid="e6f35871-e31a-50dc-b78a-df46572dee02">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="9" y1="21" x2="9" y2="7" stroke="#493825" stroke-width="1.8"/><path d="M9.00 3.50 L11.31 7.70 L6.69 7.70 Z" fill="#493825"/><path d="M15.89 6.21 A9 9 0 0 1 14.79 18.89" fill="none" stroke="#493825" stroke-width="1.5"/><path d="M14.79 18.89 L16.02 15.70 L18.14 18.23 Z" fill="#493825"/><text x="17.3" y="6" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.6" font-weight="700" fill="#493825" text-anchor="middle">TN</text></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="9" y1="21" x2="9" y2="7" stroke="#BBEAFF" stroke-width="1.8"/><path d="M9.00 3.50 L11.31 7.70 L6.69 7.70 Z" fill="#BBEAFF"/><path d="M15.89 6.21 A9 9 0 0 1 14.79 18.89" fill="none" stroke="#BBEAFF" stroke-width="1.5"/><path d="M14.79 18.89 L16.02 15.70 L18.14 18.23 Z" fill="#BBEAFF"/><text x="17.3" y="6" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.6" font-weight="700" fill="#BBEAFF" text-anchor="middle">TN</text></svg>
+      </dark>
+    </icon>
+    <icon guid="94d725f8-b8a6-58bd-83f0-da8b98df7040">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="8" width="9" height="9" fill="#C1B0A3" stroke="#493825" stroke-width="1"/><path d="M2.51 9.59 A8.5 8.5 0 0 1 14.75 5.14" fill="none" stroke="#493825" stroke-width="1.5"/><path d="M14.75 5.14 L11.33 5.07 L12.98 2.21 Z" fill="#493825"/><line x1="19.5" y1="21" x2="19.5" y2="13.5" stroke="#493825" stroke-width="1.5"/><path d="M19.50 10.50 L21.37 13.90 L17.63 13.90 Z" fill="#493825"/><text x="19.5" y="7.6" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.2" font-weight="700" fill="#493825" text-anchor="middle">PN</text></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="8" width="9" height="9" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="1"/><path d="M2.51 9.59 A8.5 8.5 0 0 1 14.75 5.14" fill="none" stroke="#BBEAFF" stroke-width="1.5"/><path d="M14.75 5.14 L11.33 5.07 L12.98 2.21 Z" fill="#BBEAFF"/><line x1="19.5" y1="21" x2="19.5" y2="13.5" stroke="#BBEAFF" stroke-width="1.5"/><path d="M19.50 10.50 L21.37 13.90 L17.63 13.90 Z" fill="#BBEAFF"/><text x="19.5" y="7.6" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.2" font-weight="700" fill="#BBEAFF" text-anchor="middle">PN</text></svg>
+      </dark>
+    </icon>
+    <icon guid="e8d25286-8cd5-5ab6-aa7d-41b25ad29fbb">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4.48 9.26 A8 8 0 0 1 18.93 8.00" fill="none" stroke="#493825" stroke-width="1.8"/><path d="M18.93 8.00 L16.00 6.23 L18.86 4.58 Z" fill="#493825"/><path d="M19.52 14.74 A8 8 0 0 1 5.07 16.00" fill="none" stroke="#493825" stroke-width="1.8"/><path d="M5.07 16.00 L8.00 17.77 L5.14 19.42 Z" fill="#493825"/><circle cx="12" cy="12" r="2.9" fill="none" stroke="#493825" stroke-width="1.1"/><path d="M12 12 L12 9.1 A2.9 2.9 0 0 1 14.9 12 Z" fill="#493825"/><path d="M12 12 L12 14.9 A2.9 2.9 0 0 1 9.1 12 Z" fill="#493825"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4.48 9.26 A8 8 0 0 1 18.93 8.00" fill="none" stroke="#BBEAFF" stroke-width="1.8"/><path d="M18.93 8.00 L16.00 6.23 L18.86 4.58 Z" fill="#BBEAFF"/><path d="M19.52 14.74 A8 8 0 0 1 5.07 16.00" fill="none" stroke="#BBEAFF" stroke-width="1.8"/><path d="M5.07 16.00 L8.00 17.77 L5.14 19.42 Z" fill="#BBEAFF"/><circle cx="12" cy="12" r="2.9" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M12 12 L12 9.1 A2.9 2.9 0 0 1 14.9 12 Z" fill="#BBEAFF"/><path d="M12 12 L12 14.9 A2.9 2.9 0 0 1 9.1 12 Z" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="ff4bf669-03e7-5b89-b057-e1bd5559887b">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M21.46 12.82 L21.06 14.86 L18.39 15.32 L17.51 16.63 L18.11 19.27 L16.38 20.43 L14.17 18.86 L12.62 19.17 L11.18 21.46 L9.14 21.06 L8.68 18.39 L7.37 17.51 L4.73 18.11 L3.57 16.38 L5.14 14.17 L4.83 12.62 L2.54 11.18 L2.94 9.14 L5.61 8.68 L6.49 7.37 L5.89 4.73 L7.62 3.57 L9.83 5.14 L11.38 4.83 L12.82 2.54 L14.86 2.94 L15.32 5.61 L16.63 6.49 L19.27 5.89 L20.43 7.62 L18.86 9.83 L19.17 11.38 Z" fill="#493825"/><circle cx="12" cy="12" r="3.02" fill="#FFFFFF"/><circle cx="12" cy="12" r="2.2" fill="none" stroke="#493825" stroke-width="1.2"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M21.46 12.82 L21.06 14.86 L18.39 15.32 L17.51 16.63 L18.11 19.27 L16.38 20.43 L14.17 18.86 L12.62 19.17 L11.18 21.46 L9.14 21.06 L8.68 18.39 L7.37 17.51 L4.73 18.11 L3.57 16.38 L5.14 14.17 L4.83 12.62 L2.54 11.18 L2.94 9.14 L5.61 8.68 L6.49 7.37 L5.89 4.73 L7.62 3.57 L9.83 5.14 L11.38 4.83 L12.82 2.54 L14.86 2.94 L15.32 5.61 L16.63 6.49 L19.27 5.89 L20.43 7.62 L18.86 9.83 L19.17 11.38 Z" fill="#BBEAFF"/><circle cx="12" cy="12" r="3.02" fill="#2B2B2B"/><circle cx="12" cy="12" r="2.2" fill="none" stroke="#BBEAFF" stroke-width="1.2"/></svg>
+      </dark>
+    </icon>
+    <icon guid="09ab83a6-73c9-5e2a-b9a5-adae0f596b29">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14.6 15.6 C20.5 15.6 23.4 10.5 22 6.4 C20.9 3.1 17 1.6 14.4 3.2 C12.6 4.3 12.9 6.6 14.9 7.1 C17.4 7.7 18.3 10.2 16.4 12.3 C15.5 13.3 14.4 13.9 13.6 14.2 Z" fill="#493825"/><ellipse cx="9.4" cy="16" rx="6.8" ry="4.3" fill="#493825"/><path d="M3.6 13.2 C2.2 13.6 1.2 15 1.4 16.3 C1.6 17.4 2.9 17.9 4.4 17.6 Z" fill="#493825"/><circle cx="4.6" cy="14.9" r="2.6" fill="#493825"/><rect x="5.6" y="18.8" width="2" height="3" rx="0.8" fill="#493825"/><rect x="12" y="18.8" width="2" height="3" rx="0.8" fill="#493825"/><path d="M4.4 12.6 C8 11.2 12.4 11.7 15 13.2 C17.6 11.6 19.7 9 19.4 6.2" fill="none" stroke="#FFF6EE" stroke-width="1.5" stroke-linecap="round"/><circle cx="3.5" cy="14.4" r="0.6" fill="#FFF6EE"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14.6 15.6 C20.5 15.6 23.4 10.5 22 6.4 C20.9 3.1 17 1.6 14.4 3.2 C12.6 4.3 12.9 6.6 14.9 7.1 C17.4 7.7 18.3 10.2 16.4 12.3 C15.5 13.3 14.4 13.9 13.6 14.2 Z" fill="#BBEAFF"/><ellipse cx="9.4" cy="16" rx="6.8" ry="4.3" fill="#BBEAFF"/><path d="M3.6 13.2 C2.2 13.6 1.2 15 1.4 16.3 C1.6 17.4 2.9 17.9 4.4 17.6 Z" fill="#BBEAFF"/><circle cx="4.6" cy="14.9" r="2.6" fill="#BBEAFF"/><rect x="5.6" y="18.8" width="2" height="3" rx="0.8" fill="#BBEAFF"/><rect x="12" y="18.8" width="2" height="3" rx="0.8" fill="#BBEAFF"/><path d="M4.4 12.6 C8 11.2 12.4 11.7 15 13.2 C17.6 11.6 19.7 9 19.4 6.2" fill="none" stroke="#4F0329" stroke-width="1.5" stroke-linecap="round"/><circle cx="3.5" cy="14.4" r="0.6" fill="#4F0329"/></svg>
+      </dark>
+    </icon>
+    <icon guid="8792aee1-5875-56d8-8f00-efb4737bb5f3">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="19" height="17" rx="1" fill="none" stroke="#4F0329" stroke-width="1.4"/><g transform="rotate(25 12 12.5)"><path d="M12 6 L9 17.5 L12 15.4 L15 17.5 Z" fill="#4F0329"/></g><path d="M5.23 10.04 A7.2 7.2 0 0 1 9.54 5.73" fill="none" stroke="#4F0329" stroke-width="1.2"/><path d="M9.54 5.73 L7.28 8.31 L6.15 5.21 Z" fill="#4F0329"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="19" height="17" rx="1" fill="none" stroke="#BBEAFF" stroke-width="1.4"/><g transform="rotate(25 12 12.5)"><path d="M12 6 L9 17.5 L12 15.4 L15 17.5 Z" fill="#BBEAFF"/></g><path d="M5.23 10.04 A7.2 7.2 0 0 1 9.54 5.73" fill="none" stroke="#BBEAFF" stroke-width="1.2"/><path d="M9.54 5.73 L7.28 8.31 L6.15 5.21 Z" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="88676b4d-6976-5584-873c-0fe694fb02a2">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M1.5 12 C5 6.2 19 6.2 22.5 12 C19 17.8 5 17.8 1.5 12 Z" fill="none" stroke="#4F0329" stroke-width="1.5"/><path d="M12 8 L16 14.8 L8 14.8 Z" fill="#C1B0A3" stroke="#4F0329" stroke-width="1.2" stroke-linejoin="round"/><circle cx="12" cy="12.6" r="1.1" fill="#4F0329"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M1.5 12 C5 6.2 19 6.2 22.5 12 C19 17.8 5 17.8 1.5 12 Z" fill="none" stroke="#BBEAFF" stroke-width="1.5"/><path d="M12 8 L16 14.8 L8 14.8 Z" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="1.2" stroke-linejoin="round"/><circle cx="12" cy="12.6" r="1.1" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+  </icons>
+  <bitmaps>
+    <small_bitmap item_width="16" item_height="16" />
+    <normal_bitmap item_width="24" item_height="24" />
+    <large_bitmap item_width="32" item_height="32" />
+  </bitmaps>
+  <scripts />
+</RhinoUI>

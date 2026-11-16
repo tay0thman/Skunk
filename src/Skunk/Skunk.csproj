@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The compiled, always-on Skunk plug-in: Skunk.rhp loads when Rhino starts, so the event service
+    keeps levels and spots live from the first moment (the Script Editor package starts it with the
+    first Skunk command). Same sources as the engine, plus the PlugIn class and the command classes
+    generated from tools/commands.json. Same plug-in id and command names as ScriptEditor/Skunk.rhproj:
+    install one or the other, never both.
+
+      dotnet build src\Skunk\Skunk.csproj -c Release      (or src\build-plugin.cmd)
+
+    Release builds copy Skunk.rhp + Skunk.rui to dist\ and pack dist\skunk-<version>-rh9_0-win.yak.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetExt>.rhp</TargetExt>
+    <LangVersion>12</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Skunk</AssemblyName>
+    <RootNamespace>Skunk</RootNamespace>
+    <Authors>Tay Othman</Authors>
+    <Company>Boulder Associates</Company>
+    <Copyright>Tay Othman</Copyright>
+    <Product>Skunk</Product>
+    <Description>Skunk: project coordinate systems, datum levels and spot annotations for Rhino 9 (compiled, loads at start-up).</Description>
+    <NoWarn>$(NoWarn);NU1701;CS1591</NoWarn>
+    <Deterministic>true</Deterministic>
+    <Optimize>true</Optimize>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <DistDir>$(MSBuildProjectDirectory)\..\..\dist</DistDir>
+    <YakStage>$(LOCALAPPDATA)\Skunk-build\yak-stage</YakStage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Skunk.Core\**\*.cs" Exclude="..\Skunk.Core\obj\**;..\Skunk.Core\bin\**" />
+    <EmbeddedResource Include="Resources\Skunk.ico" LogicalName="Skunk.Plugin.Resources.Skunk.ico" Condition="Exists('Resources\Skunk.ico')" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseLocalRhino)' == 'true'">
+    <Reference Include="RhinoCommon"><HintPath>$(RhinoSystemDir)\RhinoCommon.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Rhino.UI"><HintPath>$(RhinoSystemDir)\Rhino.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Eto"><HintPath>$(RhinoSystemDir)\Eto.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLocalRhino)' != 'true'">
+    <PackageReference Include="RhinoCommon" Version="$(RhinoCommonVersion)" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <!-- dist\Skunk.rhp + Skunk.rui (drag Skunk.rhp onto Rhino) and the Yak package (staged outside the synced folder). -->
+  <Target Name="PackagePlugin" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <RemoveDir Directories="$(YakStage)" />
+    <MakeDir Directories="$(YakStage);$(DistDir)" />
+    <!-- dist\Skunk.rhp is locked while Rhino has the plug-in loaded: warn, and still build the .yak -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DistDir)" ContinueOnError="true" Retries="0">
+      <Output TaskParameter="CopiedFiles" ItemName="SkunkRhpCopied" />
+    </Copy>
+    <Warning Condition="'@(SkunkRhpCopied)' == ''" Text="dist\Skunk.rhp is in use (Rhino has Skunk loaded) and was NOT replaced. Close Rhino and run src\build-plugin.cmd again; the next Rhino start then loads the new version. The .yak in dist is up to date." />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\ScriptEditor\Skunk.rui" DestinationFolder="$(DistDir)" ContinueOnError="true" Retries="0" />
+    <Copy SourceFiles="$(TargetPath);$(MSBuildProjectDirectory)\..\..\ScriptEditor\Skunk.rui;package\manifest.yml;package\icon.png" DestinationFolder="$(YakStage)" />
+    <Exec Command="&quot;$(RhinoSystemDir)\Yak.exe&quot; build --platform win" WorkingDirectory="$(YakStage)" Condition="Exists('$(RhinoSystemDir)\Yak.exe')" />
+    <ItemGroup>
+      <SkunkYak Include="$(YakStage)\*.yak" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SkunkYak)" DestinationFolder="$(DistDir)" />
+    <Message Importance="high" Text="Skunk.rhp, Skunk.rui, @(SkunkYak->'%(Filename)%(Extension)') -> dist" />
+  </Target>
+</Project>

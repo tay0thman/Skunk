@@ -1,0 +1,14 @@
+* text=auto
+*.cs text eol=lf
+*.csproj text eol=lf
+*.props text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.rhproj text eol=lf
+*.rui text eol=lf
+*.yml text eol=lf
+*.cmd text eol=crlf
+*.png binary
+*.ico binary
+*.yak binary

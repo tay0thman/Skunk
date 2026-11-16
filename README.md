@@ -1,0 +1,262 @@
+# Skunk
+
+Project coordinate systems, datum levels and spot annotations for Rhino 9, as parametric objects
+you can model with and print.
+
+## Download and install
+
+**[Download Skunk 1.4.1 for Rhino 9 on Windows (.yak)](https://github.com/tay0thman/Skunk/releases/download/v1.4.1/skunk-1.4.1-rh9_0-win.yak)**
+
+The package is publicly downloadable without a GitHub account. See
+[all releases](https://github.com/tay0thman/Skunk/releases) for release notes and SHA-256 checksums.
+
+1. Download the `.yak` package above. It contains the compiled Skunk plug-in and toolbar.
+2. Drag the downloaded file onto Rhino 9 and complete the installation, then restart Rhino.
+3. Run `Skunk` to show the toolbar and check the installed version.
+
+If you prefer the command line, [Yak supports installing a local package](https://developer.rhino3d.com/guides/yak/yak-cli-reference/#install):
+
+```powershell
+& "C:\Program Files\Rhino 9\System\Yak.exe" install "C:\path\to\skunk-1.4.1-rh9_0-win.yak"
+```
+
+Requires Rhino 9 for Windows. Install only one Skunk build: the compiled plug-in and
+Script Editor build share a plug-in ID. The download above is the compiled build, which
+starts its update service when Rhino starts. For building from source, see [Install / build](#install--build).
+
+## Features
+
+- **Coordinate systems.** The internal origin is Rhino's world origin. The project base point and the
+  survey point each live on their own named CPlane, so **true north is the Y axis of a separate
+  CPlane**, independent of the world and of project north. Shared coordinates, clipped and unclipped
+  survey points, Rotate True North / Project North and Specify / Report Coordinates work the way
+  BIM users expect.
+- **Levels.** Datum levels have heads in every elevation direction, their own named CPlane (the work
+  plane), and objects attached to them that move when the level moves.
+- **Spot annotations.** Spot elevations, spot coordinates and spot slopes sit on surfaces,
+  polysurfaces, terrain meshes, SubDs, edges and curves. They measure from the project base point, the
+  survey point, the internal origin, a level, or **any named CPlane**.
+- **North arrows** that keep pointing to true north.
+- **A familiar UI.** A Properties palette with a Type Selector and Edit Type, a Type Properties
+  dialog, and Location, Levels and Settings dialogs, on one Skunk toolbar whose sections (Architecture, Annotate,
+  Manage, View) are separated by toolbar separators.
+
+Every annotation is a native Rhino object: a leader, a linear dimension or a block. That means it
+snaps, prints at the right size in layout details, goes through Make2D and exports to DWG like any
+Rhino annotation. Skunk's event service keeps each one up to date **whenever it or its host moves**.
+
+Icon sheet (both themes): [docs/icons-preview.html](docs/icons-preview.html).
+
+## Install / build
+
+Skunk ships two ways, built from the same sources, with the same commands, toolbar and plug-in id.
+**Install one or the other, never both** (Rhino loads only one plug-in with a given id). Publish to
+the Yak server from one channel only.
+
+| | Script Editor project (the deliverable) | Compiled, always-on plug-in |
+|---|---|---|
+| Source | `ScriptEditor/Skunk.rhproj` + `shared/Skunk.Core.dll` | `src/Skunk/Skunk.csproj` (engine compiled in) |
+| Built by | Rhino 9 Script Editor: Build / Publish | `src\build-plugin.cmd` (dotnet + Yak.exe) |
+| Output | `ScriptEditor\build\rh9\skunk-1.4.1-rh9-any.yak` | `dist\Skunk.rhp` + `Skunk.rui`, `dist\skunk-1.4.1-rh9_0-win.yak` |
+| Live updates start | at the first Skunk command of a session (or add `Skunk` to the startup commands) | **when Rhino starts** (the plug-in loads at start-up) |
+| First-command cost | about 1-2 s once per session (C# script engine) | none |
+
+Both compile against RhinoCommon 9.0.26300.9401 (NuGet). Use Rhino 9 at that build or newer.
+Building from source requires the .NET 8 SDK and Rhino 9 for packaging; Python 3 is needed
+when regenerating the project and command files. Generated binaries and package outputs
+are excluded from Git; download a release above if you only want to install Skunk.
+
+**Script Editor project**
+1. Build the engine (only after changing C#): `src\build-core.cmd`. This writes
+   `ScriptEditor\shared\Skunk.Core.dll`.
+2. In Rhino 9, open the Script Editor (`ScriptEditor` command), then *File > Open Project* and choose
+   `ScriptEditor\Skunk.rhproj`.
+3. Choose *Build & Load* to try it, or *Publish* to push it to the Yak server (your McNeel account).
+   A package built from the project is in `ScriptEditor\build\rh9\skunk-1.4.1-rh9-any.yak`. Drag it
+   onto Rhino, or install it with `yak install`.
+4. **To keep elements live from the moment Rhino starts:** add the command `Skunk` to
+   *Tools > Options > General > Command Lists* (Run these commands every time Rhino starts).
+   Otherwise live updates start with the first Skunk command of a session. Starting the service later
+   is safe: it re-syncs every element of every open model. `Skunk` also shows the Skunk toolbar, so
+   as a startup command it brings the toolbar up with Rhino.
+
+**Google Drive and the build folder.** Google Drive can mark project folders read-only,
+and the Script Editor cannot delete read-only folders. Its package build deletes the previous
+`build\rh9` first, so every build after the first one failed with *Error preparing build directory
+... Access to the path '...\build\rh9\shared' is denied*. That is why `ScriptEditor\build` is a
+junction to `%LOCALAPPDATA%\Skunk-build\ScriptEditor-build` in the author's workspace, outside
+Drive: every path stays the same and the build output is not synced. The junction is not
+stored in Git. If your checkout is synced by Google Drive, run `tools\link-build-folder.cmd`
+once (`gen_project.py` warns when the link is missing).
+
+**Compiled plug-in**
+1. `src\build-plugin.cmd` builds `dist\Skunk.rhp`, `dist\Skunk.rui` and the `.yak`.
+2. Drag `dist\Skunk.rhp` (or the `.yak`) onto Rhino 9, then restart Rhino. The plug-in loads at
+   start-up and starts the event service on Rhino's first idle; no startup command is needed.
+3. To switch back to the Script Editor build, uninstall the plug-in first (Plug-in Manager, or the
+   Package Manager for the `.yak`).
+
+Either way, show the toolbar with `Toolbar` > *Skunk*: one toolbar, with separators between its
+Architecture, Annotate, Manage and View sections.
+
+**Updating the compiled plug-in: close Rhino first.** Rhino locks the `Skunk.rhp` it loaded (the
+build then warns and leaves it; the `.yak` in `dist` is still rebuilt), and when Rhino closes it
+writes the toolbar it has loaded back into `dist\Skunk.rui` (keeping the previous file as
+`Skunk.rui.bak`), which would replace a newer toolbar. So close Rhino, run `src\build-plugin.cmd`,
+then start Rhino: it loads the new plug-in and toolbar.
+
+The version of every build is the rhproj `identity.version` (edit it in the Script Editor). Run
+`python tools/gen_project.py` afterwards: it writes `src/Version.props` and the plug-in's Yak manifest.
+**Before you publish a new version**, set it, close Rhino, run `python tools/gen_project.py` and
+`src\build-core.cmd`, then reopen the project and publish: the engine in the package then reports the
+same version as the package (the `Skunk` command and SkSettings > About show the engine's version).
+
+## Commands and toolbar
+
+| Section | Command | What it does |
+|---|---|---|
+| Architecture | `SkLevel` | Pick an elevation (or type one) to create a level. Extents come from the previous level, the model, or two picked corners. Right-click opens the Levels manager. |
+| | `SkLevels` | Levels manager: rename, change elevations, add a level above, delete, go to. |
+| | `SkGoToLevel` | Sets the CPlane to the level. Optional plan view, and a view range: a clipping plane at the cut height with depth below the level. |
+| | `SkAttachToLevel` / `SkDetachFromLevel` | Attached objects move with their level. |
+| Annotate | `SkSpotElevation` | Actual / Top / Bottom / Top & Bottom elevations. Options: Leader, Shoulder, Relative Base, PickMode (object or snapped point). |
+| | `SkSpotCoordinate` | N/S and E/W (plus elevation) from the PBP, the survey point (shared), the internal origin or a named CPlane. |
+| | `SkSpotSlope` | Slope arrow on surfaces, meshes and edges, pointing downhill (Up / Down / flip). It lies **on the surface, down the fall line** (or along the edge); the type's Placement option can keep it flat in the view plane instead. **Drag its top and bottom grips** to set how far it reaches; **move it** and it measures where it now is. Formats: %, ‰, degrees, rise / 12", 1:x, x:12 and more. |
+| | `SkNorthArrow` | Re-orients itself when true north changes. |
+| | `SkEditType` | Type Properties of the selected element's type. |
+| | `SkProperties` | Live palette for the selection. With nothing selected it shows the project location. |
+| Manage | `SkLocation` | PBP shared coordinates, angle to true north, survey point values / clip, which named CPlanes hold them. |
+| | `SkProjectBasePoint` | Move it (the model stays) or type N/S, E/W, Elev and the angle. |
+| | `SkSurveyPoint` | Clipped: moves the shared system. Unclipped: moves only the marker. |
+| | `SkSpecifyCoordinates` | Give a picked point its shared coordinates and true north. |
+| | `SkReportCoordinates` | Shared, project and internal coordinates of picked points. |
+| | `SkImportSharedCoordinates` | Match a BIM model's shared coordinates: copy the Python snippet it shows into that model's Python console, paste the line it prints back, say where the Rhino model sits (the model's internal origin, its project base point, or its shared coordinates) and import. Sets the project base point, the survey point with its shared values, and true north; one Undo reverts it. |
+| | `SkRotateTrueNorth` | About the PBP or the survey point; the model stays. |
+| | `SkRotateProjectNorth` | Rotates the model (90°, 180°, an angle, align to a line); shared coordinates stay. |
+| | `SkUpdate` / `SkSettings` / `Skunk` | Re-sync everything; settings; `Skunk` loads Skunk, starts live updates, **shows the Skunk toolbar** and reports status. |
+| View | `SkOrientView` | Left click: true north up. Right click: project north up. |
+| | `SkShowSite` | Show / hide the internal origin, PBP and survey point. |
+
+**Keyboard aliases.** `SkSettings` > *Keyboard aliases* adds Skunk's suggestions in one click: LL (Level),
+PI (Properties), SPE / SPC / SPS (spot elevation / coordinate / slope). *Edit aliases...* lists every Skunk
+command, grouped like the toolbar, with the alias Rhino has for it now: type your own to override it, or
+clear it for none, then Apply. An alias that already runs another command is left alone unless you tick
+*Replace an alias that already runs another command*; the result says what was set, removed, replaced or
+left alone. A command's old alias goes when you give it a new one (an earlier PP for Properties becomes
+PI). Aliases are Rhino settings, so they work in every model.
+
+**Units follow Rhino.** Every length Skunk shows (spot and level text, the Properties palette, the
+dialogs, command-line reports) follows *Document Properties > Units*: the unit system, the distance
+display (decimal, fractional, feet and inches) and the display precision. Change them and every
+annotation re-labels itself. New types use *Rhino document units*; a type can still choose a fixed
+format in Type Properties (for example decimal feet for survey coordinates), and that choice stays.
+Type sizes (text height, symbols, arrow length) are paper sizes shown in Rhino's page (layout) units.
+Changing the model units with scaling keeps everything in place: Skunk scales the lengths it stores
+(leader offsets, slope reach, level elevations, the survey point's shared values) by the same factor,
+also when the change happened while Skunk was not running.
+
+**Rhino dimensions on a Skunk sublayer.** On by default: dimensions and leaders drawn with Rhino's own
+commands go to `Skunk::Dimensions` as they are made, in the same undo step. Text stays where it is, and
+Skunk's own annotations keep their layers. In `SkSettings` > *Rhino dimensions* you can turn it off or
+name another sublayer; *Move existing Rhino dimensions there now* moves the ones already in the model.
+
+**Importing shared coordinates.** `SkImportSharedCoordinates` shows a short Python snippet. Run it in the
+BIM model's Python console; it prints one line starting with `SKUNK-SITE` (both base points with their
+shared values, and the model's coordinate transform). Paste that line (or the whole output) back, choose
+where the Rhino model sits, and the preview shows what will be set before you import. Skunk checks the
+transform against both points' own shared values and warns when they disagree. Lengths arrive in the
+model's feet and are converted to Rhino's units.
+
+**Levels: line pattern and heads.** A level type has a *Line Pattern* (By Layer = Skunk Datum, or
+Skunk Datum, Center, DashDot, Dashed, Hidden, Border, Dots, Continuous or any linetype in the model;
+Rhino's standard ones load on demand) and a *Line Pattern Scale*. Each level can override the
+pattern in the Properties palette. *Heads At* (Right end / Left end / Both ends / None) puts the
+heads at either end of the level line in every elevation; `SkLevel` has the same choice as its
+`Heads` option, and each side can still be switched on its own.
+
+**Spot slope arrows.** The arrow runs through its location along the fall line there, and its two
+grips (the dimension's definition points) are its top and bottom ends. Drag one to set how far the
+arrow reaches uphill or downhill: only the part of the drag along the slope counts, so the arrow
+keeps following the surface. Move the arrow (drag it, nudge its line sideways, Move, Rotate, Copy)
+and it lands on the host where you put it, turns to the fall line there and measures there. The
+value is the slope between the arrow's two ends, rise over plan run, with the ends on the host
+straight below / above the arrow: on a plane it is the plane's slope, on a ruled or warped surface
+it is the slope where the arrow is and as long as it is. The Properties palette shows the reach
+(*Arrow Top* / *Arrow Bottom*, editable; clear one for the type's arrow length), the rise and run,
+and the surface's own slope at the location when it differs.
+
+**Properties palette.** Besides the editable parameters, every element shows what it measures
+and where it is: spots list the host, the face they sit on, the value from their origin, top /
+bottom / thickness, the slope in four formats with the fall direction as a bearing from true and
+project north, and the point in shared, project and internal coordinates; levels list their
+elevation in every system, story height, extents and area, attached objects, relative spots and plan
+cuts; ordinary objects list base level, base / top offset, height and top / bottom elevations. Every
+element shows its layer and id, and nothing selected shows the project location and counts.
+
+## How it works (short version)
+
+- **Data.** Each element is a native Rhino object carrying `Skunk:Kind` and `Skunk:Data` (JSON) user
+  text. Types, the site and settings are JSON in the document strings (section `Skunk`). The project
+  base point and survey point are point objects on a no-print layer, kept in sync both ways with
+  their named CPlanes.
+- **Hosting.** A spot stores its host as surface parameters normalised to the face domain, a mesh
+  face plus barycentric weights, or a normalised curve parameter. Moving, rotating or scaling the
+  host, or editing its control points, keeps the spot on the same spot. Dragging a spot slides it
+  along the host. Its leader text keeps its offset.
+- **Events.** Document events only record what changed. Updates run at the end of the command's undo
+  record, so **one Undo reverts the host and its annotations together**. Changes made outside
+  commands are processed on idle in a "Skunk Update" undo record. Undo / Redo replays are left alone.
+- **Printing.** Type sizes are paper sizes. With Rhino's model space annotation scaling on
+  (recommended, see `SkSettings`), text and symbols print at the type size in every detail.
+  Leader offsets and slope arrows use the annotation scale.
+
+Details: [docs/Design.md](docs/Design.md).
+
+## Repository map
+
+```
+ScriptEditor/            the Rhino 9 Script Editor project (deliverable)
+  Skunk.rhproj           commands, icons, ids, version, Yak settings
+  Sk*.cs, Skunk.cs       one-line C# command scripts -> Skunk.SkunkEntry in shared/Skunk.Core.dll
+  Skunk.rui              the Skunk toolbar, sections separated (linked from the rhproj, ruiAuto = false)
+  shared/Skunk.Core.dll  the engine (built from src/Skunk.Core)
+  build/rh9/             Script Editor build output (.rhp stub, .rui, .yak); build/ is a junction
+                         to %LOCALAPPDATA%\Skunk-build\ScriptEditor-build, outside Google Drive
+src/Skunk.Core/          C# engine: Core, Units, Site, Types, Elements, Service, Commands, UI (Eto)
+src/Skunk/               compiled, always-on plug-in: SkunkPlugIn.cs, Commands.g.cs (generated), Yak manifest
+src/Version.props        version of every build (generated from the rhproj)
+src/build-core.cmd       engine -> ScriptEditor\shared\Skunk.Core.dll
+src/build-plugin.cmd     compiled plug-in -> dist\
+src/tests/SkunkCheck/    headless Rhino 9 checks (engine, toolbar parse, Script Editor build, plug-in)
+dist/                    Skunk.rhp, Skunk.rui, skunk-<version>-rh9_0-win.yak (compiled channel)
+tools/                   commands.json (command list / toolbar sections / tooltips), gen_project.py, icons.py,
+                         link-build-folder.cmd (keeps the Script Editor build folder out of Google Drive)
+docs/                    Design.md, icons-preview.html
+```
+
+To add or change a command: edit `tools/commands.json`, add the `SkunkEntry` method and its
+implementation, then run `python tools/gen_project.py` (scripts, rhproj, rui, compile check, the
+plug-in's command classes), `src\build-core.cmd` and, for the compiled channel, `src\build-plugin.cmd`.
+
+## Verification
+
+- `SkunkCheck` (headless Rhino 9) runs **264 engine checks**: unit formatting, shared coordinates
+  and true north, clipped and unclipped survey points, levels (heads, CPlanes, attached objects, head
+  drags, renames), spots following moved and rotated breps and terrain meshes, copies, deletions,
+  relative spots, top and bottom elevations, slopes (end grips, moving the arrow, a ruled surface, arrows from older versions), units following
+  Rhino (display, page units, types, unit changes with and without scaling), the Rhino-dimensions
+  sublayer (on by default), importing shared coordinates (three placements, either transform direction,
+  disagreements, metric models), keyboard aliases (defaults, overrides, conflicts, swaps - on an alias list
+  in memory, never Rhino's), north arrows, copies made together with their host or level, type edits. It also compiles all
+  24 command scripts against the engine.
+- Rhino parses `Skunk.rui` (one group, one toolbar). Rhino's own project API loads `Skunk.rhproj` and
+  the Script Editor package build produces the `.yak`.
+- The compiled plug-in (9 checks, by reflection, without registering it in Rhino): same id and version
+  as the project, loads at start-up, all 24 commands with the project's command ids, icon embedded,
+  toolbar alongside.
+- The coordinate snippet runs, as written, against a stand-in for the BIM model's API
+  (`src/tests/snippet_standin.py`); `SkunkCheck site <file>` reads what it printed and applies it.
+- **Not automated:** dialogs, command-line prompts and the live event wiring inside an interactive
+  Rhino, and loading either build into Rhino itself. Rhino doesn't raise object events for headless
+  documents, so the tests drive the same processing directly. Install one build and try each command
+  once.

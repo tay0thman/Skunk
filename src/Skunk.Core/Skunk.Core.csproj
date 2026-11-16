@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The Skunk engine: coordinate systems (internal origin, project base point, survey point, named
+    CPlanes), parametric annotation elements (levels, spot elevations, spot coordinates, spot slopes,
+    north arrows), the document event service that keeps them in sync with their hosts, and the Eto
+    user interface. Building in Release copies Skunk.Core.dll into ScriptEditor/shared, where the
+    Script Editor project (ScriptEditor/Skunk.rhproj) references it as a shared resource.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Skunk.Core</AssemblyName>
+    <RootNamespace>Skunk</RootNamespace>
+    <Authors>Tay Othman</Authors>
+    <Company>Boulder Associates</Company>
+    <Copyright>Tay Othman</Copyright>
+    <Description>Skunk: project coordinate systems, datum levels and spot annotations for Rhino 9.</Description>
+    <NoWarn>$(NoWarn);NU1701;CS1591</NoWarn>
+    <Deterministic>true</Deterministic>
+    <Optimize>true</Optimize>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SkunkCheck" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseLocalRhino)' == 'true'">
+    <Reference Include="RhinoCommon"><HintPath>$(RhinoSystemDir)\RhinoCommon.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Rhino.UI"><HintPath>$(RhinoSystemDir)\Rhino.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Eto"><HintPath>$(RhinoSystemDir)\Eto.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLocalRhino)' != 'true'">
+    <PackageReference Include="RhinoCommon" Version="$(RhinoCommonVersion)" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <Target Name="CopyToScriptEditorProject" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)\..\..\ScriptEditor\shared" />
+    <Message Importance="high" Text="Skunk.Core.dll -> ScriptEditor\shared" />
+  </Target>
+</Project>
