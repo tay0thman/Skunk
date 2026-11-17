@@ -8,6 +8,10 @@ namespace Skunk.Core
         {
             ("SkLevel", "Level", "Architecture"),
             ("SkLevels", "Levels", "Architecture"),
+            ("SkGrid", "Grid", "Architecture"),
+            ("SkRenumberGrids", "Renumber Grids", "Architecture"),
+            ("SkGridBubbles", "Grid Bubbles", "Architecture"),
+            ("SkDatumBox", "Datum Box", "Architecture"),
             ("SkGoToLevel", "Go To Level", "Architecture"),
             ("SkAttachToLevel", "Attach to Level", "Architecture"),
             ("SkDetachFromLevel", "Detach", "Architecture"),
@@ -16,7 +20,7 @@ namespace Skunk.Core
             ("SkSpotSlope", "Spot Slope", "Annotate"),
             ("SkNorthArrow", "North Arrow", "Annotate"),
             ("SkEditType", "Type Properties", "Annotate"),
-            ("SkProperties", "Properties", "Annotate"),
+            ("SkProperties", "Attributes", "Annotate"),
             ("SkLocation", "Location", "Manage"),
             ("SkProjectBasePoint", "Project Base Point", "Manage"),
             ("SkSurveyPoint", "Survey Point", "Manage"),
@@ -28,6 +32,7 @@ namespace Skunk.Core
             ("SkUpdate", "Update", "Manage"),
             ("SkSettings", "Settings", "Manage"),
             ("Skunk", "Skunk", "Manage"),
+            ("SkAbout", "About", "Manage"),
             ("SkOrientView", "Orientation", "View"),
             ("SkShowSite", "Site Points", "View"),
         };

@@ -29,7 +29,7 @@ namespace Skunk.Commands
             try
             {
                 SkunkService.Ensure();
-                ScaleHint(d);
+                ToolbarAfterUpdate();
                 return body(d, m);
             }
             catch (OperationCanceledException)
@@ -43,16 +43,15 @@ namespace Skunk.Commands
             }
         }
 
-        static readonly HashSet<uint> s_hinted = new HashSet<uint>();
-
-        /// <summary>Once per model: say so when annotation would show at 1:1 (text at its paper size in model space).</summary>
-        static void ScaleHint(RhinoDoc doc)
+        /// <summary>
+        /// Once per session, with the first Skunk command: the toolbar kept in the package folder, where package updates
+        /// leave it (and opened when no toolbar file holds it).
+        /// </summary>
+        static void ToolbarAfterUpdate()
         {
-            if (!s_hinted.Add(doc.RuntimeSerialNumber))
-                return;
-            if (DocUnits.AnnotationScale(doc) <= 1.0001)
-                Log.Info("annotation scale is 1:1 in this model - Skunk text and symbols will look tiny in model space. " +
-                         "Set the view scale (e.g. 1/8\" = 1'-0\") in SkSettings.");
+            UI.SkunkToolbar.CheckOnce();
+            // the Skunk Attributes panel: registered once a session, so Rhino can dock it and bring it back where it was
+            UI.SkunkAttributesPanel.Register();
         }
 
         /// <summary>The active view's CPlane moved to a point: the plane annotations are drawn in.</summary>
@@ -125,7 +124,7 @@ namespace Skunk.Commands
             var go = new GetObject();
             go.SetCommandPrompt(prompt);
             go.GeometryFilter = ObjectType.Curve | ObjectType.Annotation;
-            go.SetCustomGeometryFilter((o, g, ci) => ElementIO.KindOf(o) == ElementKind.Level || ElementIO.KindOf(o) == ElementKind.LevelHead);
+            go.SetCustomGeometryFilter((o, g, ci) => ElementIO.KindOf(o) == ElementKind.Level || ElementKinds.IsLevelPart(ElementIO.KindOf(o)));
             var names = levels.Select(l => OptionValue(l.Name)).ToArray();
             int idx = Math.Max(0, levels.FindIndex(l => l.Id == current));
             go.AddOptionList("Level", names, idx);
@@ -144,7 +143,7 @@ namespace Skunk.Commands
                 if (r != GetResult.Object)
                     return null;
                 var o = go.Object(0).Object();
-                if (ElementIO.KindOf(o) == ElementKind.LevelHead)
+                if (ElementKinds.IsLevelPart(ElementIO.KindOf(o)))
                 {
                     var hd = ElementIO.Read<HeadData>(o);
                     o = hd == null ? null : ElementIO.Find(doc, hd.Level);

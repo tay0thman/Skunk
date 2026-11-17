@@ -17,6 +17,11 @@ namespace Skunk.Elements
         public Vector3d Normal = Vector3d.Zero;
         /// <summary>Curve tangent - zero for faces, meshes and points.</summary>
         public Vector3d Tangent = Vector3d.Zero;
+        /// <summary>
+        /// Curve hosts: the parameter span of the kink-free piece under the sample - a line, one segment of a
+        /// polyline or polycurve, or the whole curve when it is smooth. Unset for other hosts.
+        /// </summary>
+        public Interval Segment = Interval.Unset;
         /// <summary>The host geometry the sample was evaluated on (null for free spots and missing hosts).</summary>
         public GeometryBase Geometry;
     }
@@ -237,6 +242,7 @@ namespace Skunk.Elements
                         double t = d.T0 + a.U * d.Length;
                         s.Point = c.PointAt(t);
                         s.Tangent = c.TangentAt(t);
+                        s.Segment = SegmentAround(c, t);
                         s.Found = true;
                         return true;
                     }
@@ -299,6 +305,49 @@ namespace Skunk.Elements
                 }
             }
             return ClosestPoint(s, near, out onHost);
+        }
+
+        /// <summary>
+        /// Where a spot slope arrow's end lands: like <see cref="OnHost"/>, but on a curve host it stays on the
+        /// kink-free piece under the spot (a line, one polyline segment), so the slope is that piece's and the
+        /// arrow never bends round a corner. An arrow longer than the piece ends at the piece's ends.
+        /// </summary>
+        public static bool SlopeEnd(HostSample s, Point3d near, double tol, out Point3d onHost)
+        {
+            if (s?.Geometry is Curve c && s.Segment.IsValid && near.IsValid)
+            {
+                var piece = s.Segment.IncludesInterval(c.Domain) ? c : c.Trim(s.Segment) ?? c;
+                if (piece.ClosestPoint(near, out double t))
+                {
+                    onHost = piece.PointAt(t);
+                    return onHost.IsValid;
+                }
+            }
+            return OnHost(s, near, tol, out onHost);
+        }
+
+        /// <summary>
+        /// The kink-free piece of a curve around parameter <paramref name="t"/>: a polyline's segment, a
+        /// polycurve's piece between kinks, or the whole curve when it is smooth. At a kink, the piece after it.
+        /// </summary>
+        public static Interval SegmentAround(Curve c, double t)
+        {
+            var d = c.Domain;
+            double start = d.T0, end = d.T1, from = d.T0;
+            double eps = 1e-12 * Math.Max(1, d.Length);
+            for (int guard = 0; guard < 100000 && c.GetNextDiscontinuity(Continuity.G1_continuous, from, d.T1, out double k); guard++)
+            {
+                if (k <= from + eps)
+                    break;
+                if (k > t + eps)
+                {
+                    end = k;
+                    break;
+                }
+                start = k;
+                from = k;
+            }
+            return new Interval(start, end);
         }
 
         /// <summary>

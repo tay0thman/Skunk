@@ -56,6 +56,15 @@ namespace Skunk.Types
         ViewPlane,
     }
 
+    /// <summary>Grid "Elevation Bubbles": where a grid's bubbles are in elevations and sections.</summary>
+    public enum GridElevationBubbles
+    {
+        Top = 0,
+        Bottom,
+        Both,
+        None,
+    }
+
     /// <summary>Spot "Text Location": Above Leader / Below Leader / In-line with Leader.</summary>
     public enum SpotTextLocation
     {
@@ -151,9 +160,9 @@ namespace Skunk.Types
         /// <summary>Level type "Elevation Base".</summary>
         public CoordinateBase ElevationBase = CoordinateBase.ProjectBasePoint;
         public string BaseCPlane = "";
-        public SymbolKind HeadSymbol = SymbolKind.Target;
+        public SymbolKind HeadSymbol = SymbolKind.TargetFilled;
         public double SymbolSizeMM = 6.35;
-        /// <summary>Length of the head leader past the end of the level line.</summary>
+        /// <summary>The head's tail past the end of the level line, on paper (at least the symbol's radius; see Styles.HeadTailMM).</summary>
         public double HeadLengthMM = 6.35;
         /// <summary>"Symbol at End 1 Default" / "Symbol at End 2 Default".</summary>
         public bool End1Default;
@@ -163,7 +172,7 @@ namespace Skunk.Types
         public bool ShowElevation = true;
         /// <summary>
         /// Level type "Line Pattern": a linetype name, or empty / "&lt;By Layer&gt;" for the
-        /// Skunk::Levels layer's linetype (Skunk Datum). Rhino's default linetypes are loaded on demand.
+        /// __Annotations__::Levels layer's linetype (Skunk Datum). Rhino's default linetypes are loaded on demand.
         /// </summary>
         public string LinePattern = "";
         /// <summary>Per-object linetype pattern scale for the level line.</summary>
@@ -172,6 +181,23 @@ namespace Skunk.Types
 
         [JsonIgnore]
         public override ElementKind Kind => ElementKind.Level;
+    }
+
+    public sealed class GridType : SkunkType
+    {
+        /// <summary>Bubble diameter on paper.</summary>
+        public double BubbleSizeMM = 12.7;
+        /// <summary>"Plan View Symbols End 1 (Default)" / "End 2 (Default)".</summary>
+        public bool End1Default;
+        public bool End2Default = true;
+        /// <summary>Grid line linetype: a linetype name, or empty for the __Annotations__::Grids layer's (Skunk Datum).</summary>
+        public string LinePattern = "";
+        public double LinePatternScale = 1.0;
+        /// <summary>Bubbles of the grid in elevations and sections (top, bottom, both or none).</summary>
+        public GridElevationBubbles ElevationBubbles = GridElevationBubbles.Top;
+
+        [JsonIgnore]
+        public override ElementKind Kind => ElementKind.Grid;
     }
 
     public sealed class NorthArrowType : SkunkType
@@ -187,11 +213,14 @@ namespace Skunk.Types
         public int Version = 1;
         /// <summary>2: length formats follow Rhino's document units unless a type chose its own (see TypeTable.Migrate).</summary>
         public int UnitsVersion;
+        /// <summary>2: level heads are filled by default (see TypeTable.Migrate).</summary>
+        public int SymbolsVersion;
         public List<SpotElevationType> SpotElevation = new List<SpotElevationType>();
         public List<SpotCoordinateType> SpotCoordinate = new List<SpotCoordinateType>();
         public List<SpotSlopeType> SpotSlope = new List<SpotSlopeType>();
         public List<LevelType> Level = new List<LevelType>();
         public List<NorthArrowType> NorthArrow = new List<NorthArrowType>();
+        public List<GridType> Grid = new List<GridType>();
 
         public IEnumerable<SkunkType> Of(ElementKind kind)
         {
@@ -201,8 +230,12 @@ namespace Skunk.Types
                 case ElementKind.SpotCoordinate: return SpotCoordinate;
                 case ElementKind.SpotSlope: return SpotSlope;
                 case ElementKind.Level:
-                case ElementKind.LevelHead: return Level;
+                case ElementKind.LevelHead:
+                case ElementKind.LevelLine: return Level;
                 case ElementKind.NorthArrow: return NorthArrow;
+                case ElementKind.Grid:
+                case ElementKind.GridHead:
+                case ElementKind.GridElevation: return Grid;
                 default: return Enumerable.Empty<SkunkType>();
             }
         }
@@ -222,6 +255,7 @@ namespace Skunk.Types
             if (typeof(T) == typeof(SpotSlopeType)) return ElementKind.SpotSlope;
             if (typeof(T) == typeof(LevelType)) return ElementKind.Level;
             if (typeof(T) == typeof(NorthArrowType)) return ElementKind.NorthArrow;
+            if (typeof(T) == typeof(GridType)) return ElementKind.Grid;
             return ElementKind.None;
         }
 
@@ -236,6 +270,7 @@ namespace Skunk.Types
                 case SpotSlopeType a: { var c = Json.Clone(a); c.Name = name; SpotSlope.Add(c); return c; }
                 case LevelType a: { var c = Json.Clone(a); c.Name = name; Level.Add(c); return c; }
                 case NorthArrowType a: { var c = Json.Clone(a); c.Name = name; NorthArrow.Add(c); return c; }
+                case GridType a: { var c = Json.Clone(a); c.Name = name; Grid.Add(c); return c; }
             }
             return null;
         }
@@ -249,6 +284,7 @@ namespace Skunk.Types
                 case SpotSlopeType a: return SpotSlope.Count > 1 && SpotSlope.Remove(a);
                 case LevelType a: return Level.Count > 1 && Level.Remove(a);
                 case NorthArrowType a: return NorthArrow.Count > 1 && NorthArrow.Remove(a);
+                case GridType a: return Grid.Count > 1 && Grid.Remove(a);
             }
             return false;
         }
@@ -266,12 +302,15 @@ namespace Skunk.Types
             }
         }
 
+        /// <summary>Name of the stock level type new levels use.</summary>
+        public const string StockProjectLevel = "Target Head (Project)";
+
         /// <summary>Default types (US imperial or metric template). Every length follows Rhino's document units.</summary>
         public static TypeLibrary Defaults(bool imperial)
         {
             LengthStyle Units() => new LengthStyle { Format = LengthFormat.Project, ShowUnitSymbol = imperial };
             double text = imperial ? 2.38125 : 2.5;
-            var lib = new TypeLibrary { UnitsVersion = TypeTable.CurrentUnitsVersion };
+            var lib = new TypeLibrary { UnitsVersion = TypeTable.CurrentUnitsVersion, SymbolsVersion = TypeTable.CurrentSymbolsVersion };
             lib.SpotElevation.Add(new SpotElevationType { Name = "Target Filled (Project)", Symbol = SymbolKind.TargetFilled, ElevationOrigin = CoordinateBase.ProjectBasePoint, Units = Units(), TextSizeMM = text });
             lib.SpotElevation.Add(new SpotElevationType { Name = "Target (Survey)", Symbol = SymbolKind.Target, ElevationOrigin = CoordinateBase.SurveyPoint, Units = Units(), TextSizeMM = text });
             lib.SpotElevation.Add(new SpotElevationType { Name = "Triangle (Relative)", Symbol = SymbolKind.Triangle, ElevationOrigin = CoordinateBase.Relative, ElevationIndicator = "", Units = Units(), TextSizeMM = text });
@@ -284,11 +323,15 @@ namespace Skunk.Types
             lib.SpotSlope.Add(new SpotSlopeType { Name = "Slope Arrow (Rise/12\")", Slope = new SlopeStyle { Format = SlopeFormat.RiseOver12Inches, FractionDenominator = 16 }, TextSizeMM = text });
             lib.SpotSlope.Add(new SpotSlopeType { Name = "Slope Arrow (1:x)", Slope = new SlopeStyle { Format = SlopeFormat.RatioOneToX, Precision = 0 }, TextSizeMM = text });
 
-            lib.Level.Add(new LevelType { Name = "Target Head (Project)", HeadSymbol = SymbolKind.Target, ElevationBase = CoordinateBase.ProjectBasePoint, Units = Units(), TextSizeMM = imperial ? 3.175 : 3.5 });
+            lib.Level.Add(new LevelType { Name = StockProjectLevel, HeadSymbol = SymbolKind.TargetFilled, ElevationBase = CoordinateBase.ProjectBasePoint, Units = Units(), TextSizeMM = imperial ? 3.175 : 3.5 });
             lib.Level.Add(new LevelType { Name = "Target Head (Survey)", HeadSymbol = SymbolKind.TargetFilled, ElevationBase = CoordinateBase.SurveyPoint, Units = Units(), TextSizeMM = imperial ? 3.175 : 3.5 });
             lib.Level.Add(new LevelType { Name = "Triangle Head (Project)", HeadSymbol = SymbolKind.Triangle, ElevationBase = CoordinateBase.ProjectBasePoint, Units = Units(), TextSizeMM = imperial ? 3.175 : 3.5, SymbolSizeMM = 4.7625 });
 
             lib.NorthArrow.Add(new NorthArrowType { Name = "North Arrow 3/4\"", SizeMM = 19.05 });
+
+            lib.Grid.Add(imperial
+                ? new GridType { Name = "Circle Bubble 1/2\"", BubbleSizeMM = 12.7, TextSizeMM = 4.7625 }
+                : new GridType { Name = "Circle Bubble 12 mm", BubbleSizeMM = 12, TextSizeMM = 4.5 });
             return lib;
         }
     }
@@ -310,6 +353,7 @@ namespace Skunk.Types
             if (lib.SpotSlope == null || lib.SpotSlope.Count == 0) lib.SpotSlope = defaults.SpotSlope;
             if (lib.Level == null || lib.Level.Count == 0) lib.Level = defaults.Level;
             if (lib.NorthArrow == null || lib.NorthArrow.Count == 0) lib.NorthArrow = defaults.NorthArrow;
+            if (lib.Grid == null || lib.Grid.Count == 0) lib.Grid = defaults.Grid;
             Migrate(lib);
             return lib;
         }
@@ -326,18 +370,30 @@ namespace Skunk.Types
         /// </summary>
         static void Migrate(TypeLibrary lib)
         {
-            if (lib.UnitsVersion >= CurrentUnitsVersion)
-                return;
-            void Fix(LengthStyle u)
+            if (lib.UnitsVersion < CurrentUnitsVersion)
             {
-                if (u != null && IsOldDefault(u))
-                    u.Format = LengthFormat.Project;
+                void Fix(LengthStyle u)
+                {
+                    if (u != null && IsOldDefault(u))
+                        u.Format = LengthFormat.Project;
+                }
+                foreach (var t in lib.SpotElevation) Fix(t.Units);
+                foreach (var t in lib.SpotCoordinate) Fix(t.Units);
+                foreach (var t in lib.Level) Fix(t.Units);
+                lib.UnitsVersion = CurrentUnitsVersion;
             }
-            foreach (var t in lib.SpotElevation) Fix(t.Units);
-            foreach (var t in lib.SpotCoordinate) Fix(t.Units);
-            foreach (var t in lib.Level) Fix(t.Units);
-            lib.UnitsVersion = CurrentUnitsVersion;
+            // level heads are filled by default: the stock project type still on the old hollow target follows
+            if (lib.SymbolsVersion < CurrentSymbolsVersion)
+            {
+                foreach (var t in lib.Level)
+                    if (t.Name == TypeLibrary.StockProjectLevel && t.HeadSymbol == SymbolKind.Target)
+                        t.HeadSymbol = SymbolKind.TargetFilled;
+                lib.SymbolsVersion = CurrentSymbolsVersion;
+            }
         }
+
+        /// <summary>Type libraries from this version on: level heads are filled by default.</summary>
+        public const int CurrentSymbolsVersion = 2;
 
         static bool IsOldDefault(LengthStyle u)
         {

@@ -76,6 +76,12 @@ namespace Skunk.Elements
         /// </summary>
         public double? SlopeTop;
         public double? SlopeBottom;
+        /// <summary>
+        /// Spot slope: how far the arrow sits off its host line, in paper millimetres (so it holds at any scale); in a side
+        /// view measured up from the line (negative = below it). Set by moving the arrow up or down in a side view, or in
+        /// the Skunk Attributes panel; null = the type's Offset From Model.
+        /// </summary>
+        public double? SlopeOffsetMM;
         /// <summary>"Display Elevations" (instance); null = the type's default.</summary>
         public Skunk.Types.ElevationDisplay? Display;
         /// <summary>Generated geometry fingerprint (to tell user edits from Skunk's own).</summary>
@@ -107,6 +113,8 @@ namespace Skunk.Elements
         public List<bool> End2 = new List<bool>();
         /// <summary>Head objects: key "edge:end" (end 1 or 2).</summary>
         public Dictionary<string, Guid> Heads = new Dictionary<string, Guid>();
+        /// <summary>Printed level lines: key = the first head edge of an elevation direction (see LevelElement.SyncLines).</summary>
+        public Dictionary<string, Guid> Lines = new Dictionary<string, Guid>();
         public bool BuildingStory = true;
         /// <summary>"Structural" (identity data).</summary>
         public bool Structural;
@@ -117,9 +125,58 @@ namespace Skunk.Elements
         public string CPlane = "";
         public double Z = double.NaN;
         public double[] Points;
+        /// <summary>The datum box whose plan outline this level's extents follow (empty = the level's own extents).</summary>
+        public Guid Box;
     }
 
-    /// <summary>Level head data (child of a level).</summary>
+    /// <summary>
+    /// Datum box data. The box object is a closed polyline, its plan outline, kept just under the lowest of its
+    /// levels; every level in the box (LevelData.Box) takes that outline as its extents.
+    /// </summary>
+    public sealed class DatumBoxData : ElementData
+    {
+        public string Name = "";
+        /// <summary>Plan outline at the last update, at Z = 0 (tells the user's edits from Skunk's own).</summary>
+        public double[] Points;
+        /// <summary>Top of the box as drawn on screen: the highest level in it plus a margin (model units).</summary>
+        public double Top = double.NaN;
+    }
+
+    /// <summary>Grid data. The grid object is a horizontal line from End 1 to End 2.</summary>
+    public sealed class GridData : ElementData
+    {
+        public string Name = "";
+        /// <summary>Bubble at End 1 / End 2 ("Plan View Symbols End 1 / End 2").</summary>
+        public bool End1;
+        public bool End2 = true;
+        /// <summary>Parts: "1t" / "2t" = the plan bubble at that end (one text, its mask the circle); "e1" / "e2" = the
+        /// elevation line beyond that end, "e1ut" / "e1dt" its top / bottom bubble. Models from 1.6.0 also had a circle
+        /// leader under "1", "2", "e1u", "e1d"; the next update removes them.</summary>
+        public Dictionary<string, Guid> Heads = new Dictionary<string, Guid>();
+        /// <summary>The datum box whose outline sets this grid's ends (empty = its own ends).</summary>
+        public Guid Box;
+        /// <summary>End 1 and End 2 at the last update (tells the user's edits from Skunk's).</summary>
+        public double[] Points;
+        /// <summary>Creation order: the next grid's name follows the last one's.</summary>
+        public int Seq;
+        /// <summary>Where this grid's bubbles are in elevations and sections; null = its type's Elevation Bubbles.</summary>
+        public Skunk.Types.GridElevationBubbles? ElevationBubbles;
+    }
+
+    /// <summary>
+    /// Grid part data (child of a grid): a plan bubble at End 1 or End 2 (Label: a text; a 1.6.0 circle leader has
+    /// false), or an elevation part beyond that end (Elevation: 1 = the vertical line, 2 = its top bubble, 3 = its
+    /// bottom bubble).
+    /// </summary>
+    public sealed class GridHeadData : ElementData
+    {
+        public Guid Grid;
+        public int End;
+        public bool Label;
+        public int Elevation;
+    }
+
+    /// <summary>Level head or printed level line data (child of a level); End 0 = a level line.</summary>
     public sealed class HeadData : ElementData
     {
         public Guid Level;

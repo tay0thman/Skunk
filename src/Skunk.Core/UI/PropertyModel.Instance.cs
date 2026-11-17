@@ -153,7 +153,10 @@ namespace Skunk.UI
             {
                 list.Add(Param.Check("Graphics", "Flip Slope Direction", data.FlipSlope, v => EditSpots(doc, ids, d => d.FlipSlope = v),
                     "Arrow points " + (ss0.Direction == SlopeDirection.Down ? "uphill" : "downhill") + " when checked"));
-                list.Add(RO("Graphics", "Placement", ss0.Placement == SlopePlacement.OnHost ? "On host (follows the slope)" : "View plane (flat)", "Type parameter (Edit Type)"));
+                list.Add(RO("Graphics", "Placement",
+                    SpotElement.PlacedInSideView(data) ? "Side view: in the CPlane it was placed in"
+                    : ss0.Placement == SlopePlacement.OnHost ? "On host (follows the slope)" : "View plane (flat)",
+                    "Type parameter (Edit Type). A slope placed in a side view (an elevation or section) lies in that view's CPlane, so its arrow and text show there."));
                 if (sample.Found)
                 {
                     var reach = SpotElement.MeasureSlope(ctx, ss0, data, sample);
@@ -161,6 +164,10 @@ namespace Skunk.UI
                         "How far the arrow reaches uphill from its location. Drag its top grip, type a length, or clear the box for the type's arrow length."));
                     list.Add(Param.Edit("Graphics", "Arrow Bottom (downhill)", Len(doc, reach.Bottom), t => EditReach(doc, ids, t, false),
                         "How far the arrow reaches downhill from its location. Drag its bottom grip, type a length, or clear the box for the type's arrow length."));
+                    list.Add(Param.Edit("Graphics", "Offset From Host", Len(doc, reach.Offset), t => EditSlopeOffset(doc, ids, t),
+                        SpotElement.PlacedInSideView(data)
+                            ? "How far the arrow sits above its host line (negative = below). Move the arrow up or down, type a length, or clear the box for the type's Offset From Model."
+                            : "How far the arrow sits beside its location. Type a length, or clear the box for the type's Offset From Model."));
                 }
             }
             if (first.Geometry is AnnotationBase ab)
@@ -273,6 +280,21 @@ namespace Skunk.UI
             return true;
         }
 
+        /// <summary>Set a slope arrow's offset from its host line from typed text (kept in paper mm); empty text = the type's.</summary>
+        static bool EditSlopeOffset(RhinoDoc doc, List<Guid> ids, string text)
+        {
+            double? mm = null;
+            var s = (text ?? "").Trim();
+            if (s.Length > 0)
+            {
+                if (!ParseLen(doc, s, out double model))
+                    return false;
+                mm = model / DocUnits.PaperToModel(doc, 1.0);
+            }
+            EditSpots(doc, ids, d => d.SlopeOffsetMM = mm);
+            return true;
+        }
+
         static void EditSpots(RhinoDoc doc, List<Guid> ids, Action<SpotData> change)
         {
             Kit.Edit(doc, "Skunk Properties", ctx =>
@@ -371,6 +393,12 @@ namespace Skunk.UI
                 minX = Math.Min(minX, s); maxX = Math.Max(maxX, s);
                 minY = Math.Min(minY, t); maxY = Math.Max(maxY, t);
             }
+            var boxes = DatumBoxElement.All(doc);
+            var boxNames = new[] { "(none)" }.Concat(boxes.Select(b => b.Name)).ToArray();
+            int boxIndex = info.Data.Box == Guid.Empty ? 0 : boxes.FindIndex(b => b.Id == info.Data.Box) + 1;
+            list.Add(Param.Choice("Extents", "Datum Box", boxNames, Math.Max(0, boxIndex), i =>
+                Kit.Edit(doc, "Skunk Datum Box", c => DatumBoxElement.Attach(c, info.Id, i == 0 ? Guid.Empty : boxes[i - 1].Id)),
+                "The datum box whose outline this level's extents follow; dragging one of its heads sideways takes it out"));
             list.Add(RO("Extents", "Width (E/W)", Len(doc, maxX - minX)));
             list.Add(RO("Extents", "Depth (N/S)", Len(doc, maxY - minY)));
             double area = 0;
@@ -403,6 +431,129 @@ namespace Skunk.UI
             return list;
         }
 
+        /// <summary>Parameters of a grid.</summary>
+        public static List<Param> Grid(RhinoDoc doc, RhinoObject obj)
+        {
+            var list = new List<Param>();
+            var info = GridElement.Info(doc, obj);
+            if (info == null)
+                return list;
+            var id = info.Id;
+            bool end1 = info.Data.End1, end2 = info.Data.End2;
+            list.Add(Param.Check("Graphics", "Bubble at End 1", end1, v => Kit.Edit(doc, "Skunk Grid Bubbles", c => GridElement.SetEnds(c, id, v, end2)),
+                "Plan View Symbols End 1: a bubble where the grid starts"));
+            list.Add(Param.Check("Graphics", "Bubble at End 2", end2, v => Kit.Edit(doc, "Skunk Grid Bubbles", c => GridElement.SetEnds(c, id, end1, v)),
+                "Plan View Symbols End 2: a bubble where the grid ends"));
+            var own = info.Data.ElevationBubbles;
+            var elevationChoices = new[] { "By Type (" + (info.Type?.ElevationBubbles ?? Skunk.Types.GridElevationBubbles.Top) + ")", "Top", "Bottom", "Both", "None" };
+            list.Add(Param.Choice("Graphics", "Elevation Bubbles", elevationChoices, own.HasValue ? 1 + (int)own.Value : 0, i =>
+                Kit.Edit(doc, "Skunk Grid Bubbles", c => GridElement.SetElevationBubbles(c, id, i == 0 ? (Skunk.Types.GridElevationBubbles?)null : (Skunk.Types.GridElevationBubbles)(i - 1))),
+                "Where this grid's bubbles are in elevations and sections: its type's, or its own"));
+
+            var boxes = DatumBoxElement.All(doc);
+            var boxNames = new[] { "(none)" }.Concat(boxes.Select(b => b.Name)).ToArray();
+            int boxIndex = info.Data.Box == Guid.Empty ? 0 : boxes.FindIndex(b => b.Id == info.Data.Box) + 1;
+            list.Add(Param.Choice("Extents", "Datum Box", boxNames, Math.Max(0, boxIndex), i =>
+                Kit.Edit(doc, "Skunk Datum Box", c => GridElement.Attach(c, id, i == 0 ? Guid.Empty : boxes[i - 1].Id)),
+                "The datum box whose outline sets this grid's ends; dragging a bubble along the grid takes it out"));
+            list.Add(RO("Extents", "Length", Len(doc, info.Line.Length)));
+            var site = SiteModel.Get(doc);
+            var dir = info.Line.Direction;
+            double angle = RhinoMath.ToDegrees(Math.Atan2(dir * site.Project.YAxis, dir * site.Project.XAxis));
+            list.Add(RO("Extents", "Direction", angle.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "\u00b0",
+                "From End 1 to End 2, counter-clockwise from project east"));
+            list.Add(RO("Extents", "Height", Len(doc, info.Line.From.Z), "The grid's height in the model (plan cuts never clip grids)"));
+
+            list.Add(Param.Edit("Identity Data", "Name", info.Name, t =>
+            {
+                if (string.IsNullOrWhiteSpace(t))
+                    return false;
+                Kit.Edit(doc, "Skunk Rename Grid", c => GridElement.Rename(c, id, t));
+                return true;
+            }));
+            list.Add(Param.Edit("Identity Data", "Comments", info.Data.Comments, t =>
+            {
+                Kit.Edit(doc, "Skunk Properties", c =>
+                {
+                    var o = ElementIO.Find(doc, id);
+                    var d = o == null ? null : ElementIO.Read<GridData>(o);
+                    if (d == null)
+                        return;
+                    d.Comments = t ?? "";
+                    ElementIO.Write(doc, o, ElementKind.Grid, d);
+                });
+                return true;
+            }));
+            Identity(list, doc, new List<RhinoObject> { obj }, editableName: false);
+            return list;
+        }
+
+        /// <summary>Parameters of a datum box.</summary>
+        public static List<Param> DatumBox(RhinoDoc doc, RhinoObject obj)
+        {
+            var list = new List<Param>();
+            var info = DatumBoxElement.Info(doc, obj);
+            if (info == null)
+                return list;
+            var levels = LevelElement.All(doc).Where(l => l.Data.Box == info.Id).ToList();
+            list.Add(RO("Extents", "Levels", levels.Count == 0 ? "(none)" : string.Join(", ", levels.Select(l => l.Name)),
+                "The levels whose extents follow this box. A level leaves when one of its heads is dragged sideways; its Datum Box property puts it back"));
+            var grids = GridElement.All(doc).Where(g => g.Data.Box == info.Id).ToList();
+            list.Add(RO("Extents", "Grids", grids.Count == 0 ? "(none)" : string.Join(", ", grids.Select(g => g.Name)),
+                "The grids whose ends sit on this box. A grid leaves when one of its bubbles is dragged along it; its Datum Box property puts it back"));
+            // size along its own sides, and how it is turned from project east
+            var o = info.Outline;
+            var x = o[1] - o[0];
+            x.Z = 0;
+            x.Unitize();
+            var y = new Vector3d(-x.Y, x.X, 0);
+            double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
+            foreach (var p in o)
+            {
+                var v = p - o[0];
+                minX = Math.Min(minX, v * x); maxX = Math.Max(maxX, v * x);
+                minY = Math.Min(minY, v * y); maxY = Math.Max(maxY, v * y);
+            }
+            list.Add(RO("Extents", "Length", Len(doc, maxX - minX), "Along its first side"));
+            list.Add(RO("Extents", "Width", Len(doc, maxY - minY), "Across its first side"));
+            double rotation = DatumBoxElement.Rotation(doc, o);
+            list.Add(Param.Edit("Extents", "Rotation", rotation.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + "\u00b0", t =>
+            {
+                var s = (t ?? "").Replace("\u00b0", "").Trim();
+                if (!double.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double deg))
+                    return false;
+                Kit.Edit(doc, "Skunk Rotate Datum Box", c => DatumBoxElement.SetRotation(c, info.Id, deg));
+                return true;
+            }, "Angle of its first side from project east, counter-clockwise, in degrees: type one to turn the box (and its levels) about its middle"));
+            double area = 0;
+            for (int i = 0; i < o.Count - 1; i++)
+                area += o[i].X * o[i + 1].Y - o[i + 1].X * o[i].Y;
+            list.Add(RO("Extents", "Extents Area", Area(doc, Math.Abs(area) / 2.0)));
+
+            list.Add(Param.Edit("Identity Data", "Name", info.Name, t =>
+            {
+                if (string.IsNullOrWhiteSpace(t))
+                    return false;
+                Kit.Edit(doc, "Skunk Rename Datum Box", c => DatumBoxElement.Rename(c, info.Id, t));
+                return true;
+            }));
+            list.Add(Param.Edit("Identity Data", "Comments", info.Data.Comments, t =>
+            {
+                Kit.Edit(doc, "Skunk Properties", c =>
+                {
+                    var box = ElementIO.Find(doc, info.Id);
+                    var d = box == null ? null : ElementIO.Read<DatumBoxData>(box);
+                    if (d == null)
+                        return;
+                    d.Comments = t ?? "";
+                    ElementIO.Write(doc, box, ElementKind.DatumBox, d);
+                });
+                return true;
+            }));
+            Identity(list, doc, new List<RhinoObject> { obj }, editableName: false);
+            return list;
+        }
+
         static void SetFlag(List<bool> flags, int index, bool value)
         {
             while (flags.Count <= index)
@@ -426,13 +577,21 @@ namespace Skunk.UI
 
         // ---- project base point / survey point / project --------------------------------------------------
 
-        /// <summary>Project base point / survey point parameters (also shown when nothing is selected).</summary>
+        /// <summary>
+        /// Project location parameters (shown when nothing is selected): the Rhino model's geographic location, the project
+        /// base point, the survey point, the project. A selected marker shows its own point (the survey point with the
+        /// geographic location).
+        /// </summary>
         public static List<Param> Location(RhinoDoc doc, bool pbp, bool sp)
         {
             var list = new List<Param>();
             var site = SiteModel.Get(doc);
+            if (sp)
+                Geographic(list, doc, site);
             if (pbp)
             {
+                list.Add(Param.GroupButton("Project Base Point", "Place", () => EtoKit.RunCommand("SkProjectBasePoint"),
+                    "Place the project base point: pick its new location, or type its shared coordinates (SkProjectBasePoint; the model does not move)"));
                 var shared = site.ProjectBasePointShared;
                 list.Add(Param.Edit("Project Base Point", "N/S", Len(doc, shared.Y), t => EditSite(doc, t, (s, v) => { var c = s.ProjectBasePointShared; s.SetProjectBasePointShared(c.X, v, c.Z); })));
                 list.Add(Param.Edit("Project Base Point", "E/W", Len(doc, shared.X), t => EditSite(doc, t, (s, v) => { var c = s.ProjectBasePointShared; s.SetProjectBasePointShared(v, c.Y, c.Z); })));
@@ -456,6 +615,8 @@ namespace Skunk.UI
             }
             if (sp)
             {
+                list.Add(Param.GroupButton("Survey Point", "Place", () => EtoKit.RunCommand("SkSurveyPoint"),
+                    "Place the survey point: pick its new location, or type its shared coordinates (SkSurveyPoint; clipped, the shared coordinates move with it)"));
                 list.Add(Param.Edit("Survey Point", "N/S", Len(doc, site.Data.SpNorth), t => EditSite(doc, t, (s, v) => s.Data.SpNorth = v)));
                 list.Add(Param.Edit("Survey Point", "E/W", Len(doc, site.Data.SpEast), t => EditSite(doc, t, (s, v) => s.Data.SpEast = v)));
                 list.Add(Param.Edit("Survey Point", "Elev", Len(doc, site.Data.SpElevation), t => EditSite(doc, t, (s, v) => s.Data.SpElevation = v)));
@@ -471,22 +632,12 @@ namespace Skunk.UI
                 list.Add(RO("Survey Point", "Shared Origin (internal)", Len(doc, origin.X) + ",  " + Len(doc, origin.Y) + ",  " + Len(doc, origin.Z), "Where shared N 0, E 0, Elev 0 is"));
                 list.Add(RO("Survey Point", "True North (azimuth)", Num(Azimuth(Vector3d.YAxis, site.TrueNorth)) + "° from world Y"));
                 list.Add(RO("Survey Point", "True North CPlane", site.Data.SpCPlane));
-                try
-                {
-                    var earth = doc.EarthAnchorPoint;
-                    if (earth != null && earth.EarthLocationIsSet())
-                        list.Add(RO("Survey Point", "Rhino Earth Anchor", Num(earth.EarthBasepointLatitude, 6) + "°, " + Num(earth.EarthBasepointLongitude, 6) + "°", "Latitude, longitude of Rhino's Earth anchor point"));
-                }
-                catch (Exception)
-                {
-                    // not available
-                }
             }
             if (pbp && sp)
             {
                 list.Add(RO("Project", "Model Units", doc.ModelUnitSystem.ToString()));
                 list.Add(RO("Project", "Annotation Scale", DocUnits.Describe(DocUnits.AnnotationScale(doc)) +
-                    (DocUnits.RhinoScalesAnnotation(doc) ? " (Rhino model space scale)" : " (Skunk setting)")));
+                    (DocUnits.RhinoScalesAnnotation(doc) ? " (Rhino scales Skunk's styles: paper sizes in layouts)" : " (Skunk scales the sizes)")));
                 var index = SkunkService.Instance?.Index(doc);
                 list.Add(RO("Project", "Levels", LevelElement.All(doc).Count.ToString()));
                 if (index != null)
@@ -497,6 +648,34 @@ namespace Skunk.UI
                 list.Add(RO("Project", "Live Updates", SkunkService.Instance?.Running == true ? "On" : "Off"));
             }
             return list;
+        }
+
+        /// <summary>
+        /// The project's geographic location: the Rhino model's own (its Earth anchor point, which Rhino's Sun shares),
+        /// read-only here - it is set in Rhino - and Rhino's north against true north.
+        /// </summary>
+        static void Geographic(List<Param> list, RhinoDoc doc, SiteModel site)
+        {
+            const string g = "Location";
+            const string setIt = "Set it in Rhino: Document Properties > Location, with its world map (Location... > Location > Set in Rhino opens it).";
+            var geo = GeoLocation.Read(doc);
+            if (!geo.IsSet)
+            {
+                list.Add(RO(g, "Geographic Location", "Not set in this Rhino model", "The project location is the Rhino model's geographic location. " + setIt));
+            }
+            else
+            {
+                list.Add(RO(g, "Place", geo.Name.Length > 0 ? geo.Name : "(no name)", "The Rhino model's location name. " + setIt));
+                if (geo.Description.Length > 0)
+                    list.Add(RO(g, "Address", geo.Description, "The Rhino model's location description"));
+                list.Add(RO(g, "Latitude", GeoLocation.FormatLatitude(geo.Latitude), "Latitude of the Rhino model's anchor point. " + setIt));
+                list.Add(RO(g, "Longitude", GeoLocation.FormatLongitude(geo.Longitude), "Longitude of the Rhino model's anchor point. " + setIt));
+                list.Add(RO(g, "Elevation", geo.Elevation(doc), "Elevation of the anchor point (Rhino keeps it in meters)"));
+                var p = geo.ModelPoint;
+                list.Add(RO(g, "Anchor Point (internal)", Len(doc, p.X) + ",  " + Len(doc, p.Y) + ",  " + Len(doc, p.Z), "The model point at this latitude and longitude"));
+            }
+            list.Add(RO(g, "Rhino North", geo.NorthText(site),
+                "Rhino's north (its Sun and Earth anchor point), from project north. It follows true north while the two agree; Location... > Location matches them when they differ."));
         }
 
         public static bool TryParseAngle(string text, out double clockwiseDegrees)

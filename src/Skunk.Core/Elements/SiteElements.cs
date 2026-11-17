@@ -174,17 +174,51 @@ namespace Skunk.Elements
                 return false;
             Build(ctx, level, out Plane plane, out double du, out double dv, out double depth);
             var g = (ClippingPlaneSurface)cps.Duplicate();
-            bool same = g.Plane.Origin.DistanceTo(plane.Origin) < ctx.Tol && g.PlaneDepthEnabled && Math.Abs(g.PlaneDepth - depth) < ctx.Tol;
+            var unclipped = Unclipped(ctx.Doc);
+            bool same = g.Plane.Origin.DistanceTo(plane.Origin) < ctx.Tol && g.PlaneDepthEnabled && Math.Abs(g.PlaneDepth - depth) < ctx.Tol &&
+                        SameParticipation(g, unclipped);
             if (same)
                 return false;
             var xf = Transform.Translation(0, 0, plane.Origin.Z - g.Plane.Origin.Z);
             g.Transform(xf);
             g.PlaneDepth = depth;
             g.PlaneDepthEnabled = true;
+            if (unclipped.Count == 0)
+                g.ClearClipParticipationLists();
+            else
+                g.SetClipParticipation(Array.Empty<Guid>(), unclipped, true);
             bool ok = ctx.Doc.Objects.Replace(obj.Id, g, true);
             if (ok)
                 ctx.Modified++;
             return ok;
+        }
+
+        /// <summary>The layers a plan cut does not clip: the grids, so they show on every floor.</summary>
+        public static List<int> Unclipped(RhinoDoc doc)
+        {
+            var list = new List<int>();
+            foreach (var name in new[] { Keys.GridsLayer, Keys.GridHeadsLayer })
+            {
+                int i = Layers.Find(doc, name);
+                if (i >= 0)
+                    list.Add(i);
+            }
+            return list;
+        }
+
+        static bool SameParticipation(ClippingPlaneSurface g, List<int> unclipped)
+        {
+            g.GetClipParticipation(out var ids, out var layers, out bool exclusion);
+            var have = (layers ?? Enumerable.Empty<int>()).OrderBy(x => x).ToList();
+            bool noIds = !(ids ?? Enumerable.Empty<Guid>()).Any();
+            return noIds && have.SequenceEqual(unclipped.OrderBy(x => x)) && (exclusion || have.Count == 0);
+        }
+
+        /// <summary>Bring every plan cut up to date (a grid layer appeared, so the cuts must leave it unclipped).</summary>
+        public static void UpdateAll(UpdateContext ctx)
+        {
+            foreach (var o in ElementIO.All(ctx.Doc, ElementKind.PlanCut).ToList())
+                Update(ctx, o);
         }
 
         /// <summary>Remove the plan cut of a viewport (Go To Level with ViewRange=No).</summary>

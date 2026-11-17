@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rhino;
 using Rhino.DocObjects;
 using Skunk.Units;
@@ -32,13 +33,23 @@ namespace Skunk.Core
         public double ExtentsMargin = 0.15;
         /// <summary>Put Rhino's own new dimensions and leaders (not Skunk's annotations) on the Skunk sublayer below (on by default).</summary>
         public bool DimensionsOnSkunkLayer = true;
-        /// <summary>Name of that sublayer of "Skunk".</summary>
+        /// <summary>Name of that sublayer of Skunk's top-level layer ("__Annotations__").</summary>
         public string DimensionsLayer = Keys.DimensionsLayer;
         /// <summary>
         /// Model units (metres per unit) Skunk's stored lengths are in. A different value later means the
         /// units changed while Skunk was not watching; the annotations then tell whether Rhino scaled them.
         /// </summary>
         public double MetersPerUnit;
+        /// <summary>
+        /// Keep Rhino's linetype display scale (model views only; prints never use it) at the annotation scale,
+        /// so level lines look in model views the way they print. Turns itself off when the model has a value
+        /// of its own (see LinetypeDisplay).
+        /// </summary>
+        public bool LinetypeScaleFollows = true;
+        /// <summary>The linetype display scale Skunk set last (0 = none yet).</summary>
+        public double LinetypeScaleSet;
+        /// <summary>2: Skunk Datum and the Levels layer were checked once for the 1.4.1-and-earlier problems (Styles.RepairDatum).</summary>
+        public int DatumVersion;
 
         public SkunkSettings Clone() => Json.Clone(this);
     }
@@ -112,7 +123,7 @@ namespace Skunk.Core
             {
                 s = new SkunkSettings();
                 if (s.AnnotationScale <= 0)
-                    s.AnnotationScale = DocUnits.IsImperial(doc) ? 96 : 100;
+                    s.AnnotationScale = DocUnits.DefaultViewScale(doc);
                 if (!DocUnits.IsImperial(doc))
                 {
                     s.CutHeightMeters = 1.2;
@@ -120,7 +131,7 @@ namespace Skunk.Core
                 }
             }
             if (s.AnnotationScale <= 0)
-                s.AnnotationScale = DocUnits.IsImperial(doc) ? 96 : 100;
+                s.AnnotationScale = DocUnits.DefaultViewScale(doc);
             if (s.Version < 2)
             {
                 // settings saved before the dimension sublayer became the default (until they are saved again)
@@ -217,31 +228,72 @@ namespace Skunk.Core
         }
 
         /// <summary>
-        /// The annotation scale Skunk sizes geometry with: Rhino's model space text scale when
-        /// model-space annotation scaling is on, otherwise Skunk's own setting (the view scale).
+        /// The annotation scale (the view scale) Skunk sizes its annotation with: Skunk's own setting (SkSettings),
+        /// 1/8" = 1'-0" or 1:100 to begin with (<see cref="DefaultViewScale"/>). How Rhino uses it: see
+        /// <see cref="RhinoScalesAnnotation"/> and <see cref="StyleModelSpaceScale"/>. RhinoDoc.ModelSpaceTextScale is a
+        /// separate document value Rhino does not draw dimension styles with (1 in every Rhino 9 template), so Skunk
+        /// neither reads nor sets it.
         /// </summary>
         public static double AnnotationScale(RhinoDoc doc)
         {
             if (doc == null)
                 return 1;
-            if (doc.ModelSpaceAnnotationScalingEnabled && doc.ModelSpaceTextScale > 0)
-                return doc.ModelSpaceTextScale;
-            return DocStore.Settings(doc).AnnotationScale;
+            double scale = DocStore.Settings(doc).AnnotationScale;
+            return scale > 0 ? scale : DefaultViewScale(doc);
         }
 
-        /// <summary>True when Rhino scales annotation (dimstyle sizes are paper sizes).</summary>
+        /// <summary>
+        /// Rhino scales annotation in model views and in layout details: its model space and layout space scaling are
+        /// both on, as in every Rhino 9 template. Dimension style sizes are then paper sizes in page units - a layout
+        /// detail prints them at that size at any detail scale (measured: a 1/8" = 1'-0" detail draws a style length
+        /// times 8 feet per page inch) - and model views show them times the style's model space scale. Otherwise
+        /// Skunk puts the scale in the sizes itself.
+        /// </summary>
         public static bool RhinoScalesAnnotation(RhinoDoc doc) =>
-            doc != null && doc.ModelSpaceAnnotationScalingEnabled && doc.ModelSpaceTextScale > 0;
+            doc != null && doc.ModelSpaceAnnotationScalingEnabled && doc.LayoutSpaceAnnotationScalingEnabled;
+
+        /// <summary>One page unit (a paper inch or millimetre) in model units.</summary>
+        public static double PageUnitInModel(RhinoDoc doc)
+        {
+            if (doc == null)
+                return 1;
+            double s = RhinoMath.UnitScale(PageUnits(doc), doc.ModelUnitSystem);
+            return s > 0 && !double.IsInfinity(s) ? s : 1;
+        }
+
+        /// <summary>
+        /// The model space scale Skunk's styles carry. Rhino draws a style's page-unit sizes in model views times this
+        /// number, read as model units, so it is the annotation scale times one page unit in model units: 1/8" = 1'-0"
+        /// with inch pages is 96 / 12 = 8 in a feet model and 96 in an inch model; 1:100 is 100 in a millimetre model
+        /// and 0.1 in a metre one (Rhino's own templates: Millimeter Architectural 100, Meters Small 0.1). 1 when Skunk
+        /// scales the sizes itself.
+        /// </summary>
+        public static double StyleModelSpaceScale(RhinoDoc doc) =>
+            RhinoScalesAnnotation(doc) ? AnnotationScale(doc) * PageUnitInModel(doc) : 1.0;
+
+        /// <summary>The view scale a model starts with: 1/8" = 1'-0" (1:96) in feet and inches, 1:100 in metric units.</summary>
+        public static double DefaultViewScale(RhinoDoc doc) => IsImperial(doc) ? 96 : 100;
 
         /// <summary>A paper length (mm) as a model length for geometry Skunk draws itself (leader offsets, arrows).</summary>
         public static double PaperToModel(RhinoDoc doc, double paperMillimeters) =>
             FromMeters(doc, paperMillimeters / 1000.0) * AnnotationScale(doc);
 
-        /// <summary>A paper length (mm) as a dimension-style length (text height, arrow size).</summary>
+        /// <summary>
+        /// A paper length (mm) as a dimension-style length (text height, arrow size): in page units when Rhino scales
+        /// annotation (what layout details print), else the model length at the annotation scale.
+        /// </summary>
         public static double PaperToStyle(RhinoDoc doc, double paperMillimeters)
         {
-            double modelUnits = FromMeters(doc, paperMillimeters / 1000.0);
-            return RhinoScalesAnnotation(doc) ? modelUnits : modelUnits * AnnotationScale(doc);
+            if (RhinoScalesAnnotation(doc))
+                return paperMillimeters * RhinoMath.UnitScale(UnitSystem.Millimeters, PageUnits(doc));
+            return FromMeters(doc, paperMillimeters / 1000.0) * AnnotationScale(doc);
+        }
+
+        /// <summary>The page units, millimetres when the model has none set.</summary>
+        static UnitSystem PageUnits(RhinoDoc doc)
+        {
+            var u = doc.PageUnitSystem;
+            return u == UnitSystem.None || u == UnitSystem.Unset || u == UnitSystem.CustomUnits ? UnitSystem.Millimeters : u;
         }
 
         public static string Describe(double scale)
@@ -271,11 +323,15 @@ namespace Skunk.Core
         }
     }
 
-    /// <summary>Layers, created on demand under the "Skunk" parent layer.</summary>
+    /// <summary>
+    /// Layers, created on demand under one top-level layer, "__Annotations__" (Keys.RootLayer; "Skunk" in earlier builds,
+    /// which <see cref="Migrate"/> puts right). A model that already has an "__Annotations__" layer gets Skunk's sublayers in it.
+    /// </summary>
     public static class Layers
     {
         public static int Ensure(RhinoDoc doc, string childName, System.Drawing.Color color, double plotWeight = 0.0, string linetype = null)
         {
+            Migrate(doc);
             int root = doc.Layers.FindByFullPath(Keys.RootLayer, -1);
             if (root < 0)
             {
@@ -293,13 +349,148 @@ namespace Skunk.Core
                 Color = color,
                 PlotWeight = plotWeight,
             };
-            if (!string.IsNullOrEmpty(linetype))
-            {
-                var lt = doc.Linetypes.FindName(linetype);
-                if (lt != null)
-                    layer.LinetypeIndex = lt.Index;
-            }
+            var lt = FindLinetype(doc, linetype);
+            if (lt != null)
+                layer.LinetypeIndex = lt.Index;
             return doc.Layers.Add(layer);
+        }
+
+        /// <summary>
+        /// The linetype with this name, or null. Rhino's LinetypeTable.FindName never returns null: for a name
+        /// it does not know it returns the Continuous linetype (index -1), so a null check alone always passes.
+        /// </summary>
+        public static Linetype FindLinetype(RhinoDoc doc, string name)
+        {
+            if (doc == null || string.IsNullOrWhiteSpace(name))
+                return null;
+            var lt = doc.Linetypes.FindName(name);
+            return lt != null && lt.Index >= 0 && !lt.IsDeleted && string.Equals(lt.Name, name, StringComparison.OrdinalIgnoreCase) ? lt : null;
+        }
+
+        /// <summary>Index of the __Annotations__::Levels layer, or -1.</summary>
+        public static int LevelsLayerIndex(RhinoDoc doc) => Find(doc, Keys.LevelsLayer);
+
+        /// <summary>
+        /// Index of one of Skunk's sublayers, or -1. Reads only: a model from an earlier build that has not been
+        /// migrated yet still has it under "Skunk".
+        /// </summary>
+        public static int Find(RhinoDoc doc, string childName)
+        {
+            if (doc == null)
+                return -1;
+            int i = doc.Layers.FindByFullPath(Keys.RootLayer + "::" + childName, -1);
+            return i >= 0 ? i : doc.Layers.FindByFullPath(Keys.OldRootLayer + "::" + childName, -1);
+        }
+
+        /// <summary>
+        /// Earlier Skunk builds kept their layers under a top-level "Skunk" layer; it is "__Annotations__" now. The old
+        /// layer is renamed; when the model already has an "__Annotations__" layer, Skunk's sublayers move into it
+        /// instead - a sublayer it already has there takes the objects of Skunk's one - and the old layer goes once it is
+        /// empty. Objects keep their layers' colours, linetypes and states. Runs when Skunk makes a layer and when a model
+        /// opens (the service's full update). True when it changed anything.
+        /// </summary>
+        public static bool Migrate(RhinoDoc doc)
+        {
+            if (doc == null)
+                return false;
+            int old = doc.Layers.FindByFullPath(Keys.OldRootLayer, -1);
+            if (old < 0)
+                return false;
+            int root = doc.Layers.FindByFullPath(Keys.RootLayer, -1);
+            // a model's layers change as their properties are set (Rhino 9). Changing a layer makes Rhino apply its
+            // sublayers' remembered (persistent) visibility and locking again: keep the states they have now
+            var oldLayer = doc.Layers[old];
+            var states = Descendants(doc, oldLayer.Id).Select(l => (l.Index, l.IsVisible, l.IsLocked)).ToList();
+            if (root < 0)
+            {
+                oldLayer.Name = Keys.RootLayer;
+                Restore(doc, states);
+                return doc.Layers.FindByFullPath(Keys.RootLayer, -1) == old;
+            }
+            var rootId = doc.Layers[root].Id;
+            bool changed = false;
+            foreach (var child in Children(doc, oldLayer.Id))
+            {
+                int there = doc.Layers.FindByFullPath(Keys.RootLayer + "::" + child.Name, -1);
+                if (there < 0)
+                {
+                    child.ParentLayerId = rootId;
+                    changed = true;
+                    continue;
+                }
+                // a sublayer of that name is there already: it takes the objects and sublayers of Skunk's one
+                changed |= MoveObjects(doc, child, there);
+                foreach (var grandchild in Children(doc, child.Id))
+                {
+                    if (doc.Layers.FindByFullPath(doc.Layers[there].FullPath + "::" + grandchild.Name, -1) >= 0)
+                        continue;
+                    grandchild.ParentLayerId = doc.Layers[there].Id;
+                    changed = true;
+                }
+                changed |= DeleteIfEmpty(doc, child.Index);
+            }
+            Restore(doc, states);
+            changed |= DeleteIfEmpty(doc, old);
+            return changed;
+        }
+
+        static List<Layer> Descendants(RhinoDoc doc, Guid parent)
+        {
+            var list = new List<Layer>();
+            foreach (var child in Children(doc, parent))
+            {
+                list.Add(child);
+                list.AddRange(Descendants(doc, child.Id));
+            }
+            return list;
+        }
+
+        static void Restore(RhinoDoc doc, List<(int Index, bool Visible, bool Locked)> states)
+        {
+            foreach (var s in states)
+            {
+                var layer = s.Index >= 0 && s.Index < doc.Layers.Count ? doc.Layers[s.Index] : null;
+                if (layer == null || layer.IsDeleted)
+                    continue;
+                if (layer.IsVisible != s.Visible)
+                    layer.IsVisible = s.Visible;
+                if (layer.IsLocked != s.Locked)
+                    layer.IsLocked = s.Locked;
+            }
+        }
+
+        static List<Layer> Children(RhinoDoc doc, Guid parent)
+        {
+            var list = new List<Layer>();
+            foreach (var layer in doc.Layers)
+                if (layer != null && !layer.IsDeleted && layer.ParentLayerId == parent)
+                    list.Add(layer);
+            return list;
+        }
+
+        static bool MoveObjects(RhinoDoc doc, Layer from, int to)
+        {
+            bool moved = false;
+            var settings = new ObjectEnumeratorSettings { NormalObjects = true, LockedObjects = true, HiddenObjects = true, DeletedObjects = false, ReferenceObjects = false, LayerIndexFilter = from.Index };
+            foreach (var o in doc.Objects.GetObjectList(settings).ToList())
+            {
+                var a = o.Attributes.Duplicate();
+                a.LayerIndex = to;
+                moved |= doc.Objects.ModifyAttributes(o, a, true);
+            }
+            return moved;
+        }
+
+        /// <summary>Delete a layer that holds no objects and no sublayers (never the current layer).</summary>
+        static bool DeleteIfEmpty(RhinoDoc doc, int index)
+        {
+            var layer = index >= 0 && index < doc.Layers.Count ? doc.Layers[index] : null;
+            if (layer == null || layer.IsDeleted || index == doc.Layers.CurrentLayerIndex || Children(doc, layer.Id).Count > 0)
+                return false;
+            var objects = doc.Objects.FindByLayer(layer);
+            if (objects != null && objects.Length > 0)
+                return false;
+            return doc.Layers.Delete(index, true);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Skunk.Core
 {
     /// <summary>
     /// The "Rhino dimensions on a Skunk sublayer" option (SkSettings): Rhino's own dimensions and leaders
-    /// go onto Skunk::&lt;name&gt; as they are added. Skunk's annotations keep their own layers, and text
+    /// go onto __Annotations__::&lt;name&gt; as they are added. Skunk's annotations keep their own layers, and text
     /// objects stay where they are.
     /// </summary>
     public static class DimensionLayer
@@ -26,7 +26,7 @@ namespace Skunk.Core
             return n.Length == 0 || n.Contains("::") ? Keys.DimensionsLayer : n;
         }
 
-        /// <summary>Move the Rhino dimensions among <paramref name="objects"/> onto Skunk::name. Returns how many moved.</summary>
+        /// <summary>Move the Rhino dimensions among <paramref name="objects"/> onto __Annotations__::name. Returns how many moved.</summary>
         public static int Move(RhinoDoc doc, IEnumerable<RhinoObject> objects, string name)
         {
             int layer = -1, moved = 0;

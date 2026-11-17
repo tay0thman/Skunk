@@ -35,6 +35,8 @@ namespace Skunk.Plugin
 
         protected override LoadReturnCode OnLoad(ref string errorMessage)
         {
+            // the Skunk Attributes panel, registered with this plug-in as Rhino expects (it restores a docked panel)
+            Skunk.UI.SkunkAttributesPanel.Register(this);
             // documents, views and the display pipeline are ready on the first idle, not during start-up
             RhinoApp.Idle += StartService;
             return LoadReturnCode.Success;
@@ -51,6 +53,8 @@ namespace Skunk.Plugin
             {
                 Log.Error("the Skunk event service did not start", ex);
             }
+            // the toolbar kept in the package folder, where package updates leave it (new buttons after an update)
+            Skunk.UI.SkunkToolbar.CheckOnce();
         }
     }
 }

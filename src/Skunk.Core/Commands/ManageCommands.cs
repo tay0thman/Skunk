@@ -45,6 +45,7 @@ namespace Skunk.Commands
         {
             if (mode == RunMode.Scripted)
             {
+                Log.Info("Project location: " + GeoLocation.Read(doc).Summary(doc, SiteModel.Get(doc)) + ".");
                 Report(doc, "Location");
                 return Result.Success;
             }
@@ -431,6 +432,19 @@ namespace Skunk.Commands
             return Result.Success;
         }
 
+        /// <summary>SkAbout: the About Skunk dialog (-SkAbout prints the same on the command line).</summary>
+        public static Result About(RhinoDoc doc, RunMode mode)
+        {
+            if (mode == RunMode.Scripted)
+            {
+                foreach (var line in UI.AboutDialog.Lines())
+                    RhinoApp.WriteLine(line);
+                return Result.Success;
+            }
+            UI.AboutDialog.Show(doc);
+            return Result.Success;
+        }
+
         /// <summary>SkSettings: annotation scale, plan cut, behaviour, aliases.</summary>
         public static Result Settings(RhinoDoc doc, RunMode mode)
         {
@@ -439,15 +453,16 @@ namespace Skunk.Commands
         }
 
         /// <summary>
-        /// Skunk: loads the plug-in (running any of its commands does), starts the event service, shows
-        /// the Skunk toolbar and reports the state. Add it to Rhino's startup commands.
+        /// Skunk: loads the plug-in (running any of its commands does), starts the event service, makes sure the Skunk
+        /// toolbar is loaded and reports the state. Add it to Rhino's startup commands. A toolbar Rhino has loaded already is
+        /// left where the user put it (shown or hidden), so start-up never shows a second one.
         /// </summary>
         public static Result Start(RhinoDoc doc, RunMode mode)
         {
             var index = SkunkService.Instance.Index(doc);
-            bool shown = UI.SkunkToolbar.Show(out _);
+            bool loaded = UI.SkunkToolbar.Load(out _, out bool opened);
             Log.Info($"{SkunkInfo.Title} running - {index.Levels.Count} levels, {index.Spots.Count} spots, {index.Arrows.Count} north arrows in this model." +
-                     (shown ? "" : " Skunk.rui was not found next to the plug-in: open it with Toolbar > File > Open."));
+                     (!loaded ? " Skunk.rui was not found next to the plug-in: open it with Toolbar > File > Open." : opened ? " The Skunk toolbar was opened." : ""));
             return Result.Success;
         }
     }

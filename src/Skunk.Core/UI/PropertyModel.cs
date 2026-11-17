@@ -102,7 +102,7 @@ namespace Skunk.UI
                 case LevelType lt:
                     list.Add(Enum("Graphics", "Symbol", () => lt.HeadSymbol, v => lt.HeadSymbol = v));
                     list.Add(Paper("Graphics", "Symbol Size", () => lt.SymbolSizeMM, v => lt.SymbolSizeMM = v));
-                    list.Add(Paper("Graphics", "Head Length", () => lt.HeadLengthMM, v => lt.HeadLengthMM = v, "Leader from the level line end to the head text"));
+                    list.Add(Paper("Graphics", "Head Length", () => lt.HeadLengthMM, v => lt.HeadLengthMM = v, "The head's tail from the level line end to the head text, on paper (at least half the symbol size)"));
                     list.Add(Bool("Graphics", "Symbol at End 1 Default", () => lt.End1Default, v => lt.End1Default = v));
                     list.Add(Bool("Graphics", "Symbol at End 2 Default", () => lt.End2Default, v => lt.End2Default = v));
                     string[] sides = { "South", "East", "North", "West" };
@@ -128,7 +128,7 @@ namespace Skunk.UI
                         {
                             lt.LinePattern = patterns[i] == Styles.ByLayer ? "" : patterns[i];
                             changed();
-                        }, "Linetype of the level line; By Layer = the Skunk::Levels layer (Skunk Datum)"));
+                        }, "Linetype of the level line; By Layer = the __Annotations__::Levels layer (Skunk Datum)"));
                         list.Add(Param.Edit("Graphics", "Line Pattern Scale", Num(lt.LinePatternScale, 3), t =>
                         {
                             if (!ParseDouble(t, out double sc) || sc <= 0)
@@ -141,6 +141,33 @@ namespace Skunk.UI
                     break;
                 case NorthArrowType na:
                     list.Add(Paper("Graphics", "Size", () => na.SizeMM, v => na.SizeMM = v));
+                    break;
+                case GridType gt:
+                    list.Add(Paper("Graphics", "Bubble Size", () => gt.BubbleSizeMM, v => gt.BubbleSizeMM = v, "Diameter of the grid bubble on paper"));
+                    list.Add(Bool("Graphics", "Plan View Symbols End 1 (Default)", () => gt.End1Default, v => gt.End1Default = v, "New grids get a bubble where they start"));
+                    list.Add(Bool("Graphics", "Plan View Symbols End 2 (Default)", () => gt.End2Default, v => gt.End2Default = v, "New grids get a bubble where they end"));
+                    list.Add(Enum("Graphics", "Elevation Bubbles", () => gt.ElevationBubbles, v => gt.ElevationBubbles = v,
+                        "Where the grid's bubbles are in elevations and sections: at the top, the bottom, both or none"));
+                    {
+                        var patterns = new List<string> { Styles.ByLayer };
+                        patterns.AddRange(Styles.LinetypeNames(doc));
+                        string current = string.IsNullOrWhiteSpace(gt.LinePattern) ? Styles.ByLayer : gt.LinePattern;
+                        if (!patterns.Contains(current))
+                            patterns.Add(current);
+                        list.Add(Param.Choice("Graphics", "Line Pattern", patterns.ToArray(), patterns.IndexOf(current), i =>
+                        {
+                            gt.LinePattern = patterns[i] == Styles.ByLayer ? "" : patterns[i];
+                            changed();
+                        }, "Linetype of the grid line; By Layer = the __Annotations__::Grids layer (Skunk Datum)"));
+                        list.Add(Param.Edit("Graphics", "Line Pattern Scale", Num(gt.LinePatternScale, 3), s =>
+                        {
+                            if (!ParseDouble(s, out double sc) || sc <= 0)
+                                return false;
+                            gt.LinePatternScale = sc;
+                            changed();
+                            return true;
+                        }, "Per-object linetype scale of the grid line"));
+                    }
                     break;
             }
             list.Add(Param.Color("Graphics", "Color", t.Color, v => { t.Color = v; changed(); }));
@@ -255,6 +282,8 @@ namespace Skunk.UI
                     return UnitFormat.Slope(0.25 / 12.0, ss.Slope) + "   " + UnitFormat.Slope(0.02, ss.Slope);
                 case LevelType lt:
                     return "Level 2  " + UnitFormat.Length(sample / 10, TypeTable.Resolve(doc, lt.Units));
+                case GridType _:
+                    return "1   2   A   B";
                 default:
                     return "";
             }

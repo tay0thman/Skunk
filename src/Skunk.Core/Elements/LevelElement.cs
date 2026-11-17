@@ -23,12 +23,13 @@ namespace Skunk.Elements
     }
 
     /// <summary>
-    /// A level is a closed horizontal polyline (its plan extents) on the "Skunk::Levels" layer, drawn
+    /// A level is a closed horizontal polyline (its plan extents) on the "__Annotations__::Levels" layer, drawn
     /// with a datum linetype. Seen from the side in an elevation or section view it is the level line;
     /// each footprint edge can carry a level head at either end (a leader with the head symbol, the
     /// level name and its elevation) in the vertical plane of that edge, facing outward - so heads read
     /// correctly in the Front / Right / Back / Left views and in details looking at the building.
-    /// The level also owns a named CPlane (its work plane) and moves the objects attached to it.
+    /// The level also owns a named CPlane (its work plane) and moves the objects attached to it. A level in a
+    /// datum box (DatumBoxElement) takes the box's outline as its extents.
     /// </summary>
     public static class LevelElement
     {
@@ -95,7 +96,10 @@ namespace Skunk.Elements
             }
         }
 
-        /// <summary>The footprint new levels use: the last level's, or the model extents plus a margin.</summary>
+        /// <summary>
+        /// The footprint new levels use: the last level's, the outline of the only datum box when there are no
+        /// levels yet, or the model extents plus a margin.
+        /// </summary>
         public static Polyline DefaultFootprint(RhinoDoc doc, double z)
         {
             var existing = All(doc);
@@ -106,6 +110,9 @@ namespace Skunk.Elements
                     pl[i] = new Point3d(pl[i].X, pl[i].Y, z);
                 return pl;
             }
+            var box = DatumBoxElement.DefaultBox(doc);
+            if (box != Guid.Empty && DatumBoxElement.TryOutline(doc, box, out var outline))
+                return Normalize(outline, z);
             var bb = BoundingBox.Empty;
             foreach (var o in doc.Objects.GetObjectList(new ObjectEnumeratorSettings { NormalObjects = true, LockedObjects = true, HiddenObjects = false }))
             {
@@ -146,15 +153,21 @@ namespace Skunk.Elements
 
         // ---- create -----------------------------------------------------------------------------
 
-        public static Guid Create(RhinoDoc doc, string typeName, string name, double z, Polyline footprint)
+        /// <summary>Add a level; with a datum box it joins that box (and takes its outline).</summary>
+        public static Guid Create(RhinoDoc doc, string typeName, string name, double z, Polyline footprint, Guid box = default)
         {
             var ctx = new UpdateContext(doc);
             var type = ctx.Types.Find<LevelType>(typeName);
+            if (box != Guid.Empty && DatumBoxElement.TryOutline(doc, box, out var outline))
+                footprint = outline;
+            else
+                box = Guid.Empty;
             var pl = Normalize(footprint, z);
             var data = new LevelData
             {
                 Type = type?.Name ?? "",
                 Name = UniqueName(doc, string.IsNullOrWhiteSpace(name) ? NextName(doc) : name.Trim(), Guid.Empty),
+                Box = box,
             };
             var a = Styles.Attributes(doc, ElementKind.Level, type);
             a.Name = data.Name;
@@ -163,6 +176,8 @@ namespace Skunk.Elements
             var id = doc.Objects.AddCurve(new PolylineCurve(pl), a);
             if (id == Guid.Empty)
                 return id;
+            // indexed first: a datum box finds its new level when it fits its height to its levels
+            Service.SkunkService.Register(doc, id);
             Update(ctx, doc.Objects.FindId(id), UpdateReason.Created);
             Service.SkunkService.Register(doc, id);
             return id;
@@ -184,7 +199,29 @@ namespace Skunk.Elements
             bool changed = false;
 
             double z = DecideZ(pl, data.Z, ctx.Tol);
+            double zBefore = data.Z;
             var normalized = Normalize(pl, z);
+
+            // a level in a datum box takes the box's outline; a level whose own outline changed (a head dragged
+            // sideways, its footprint edited or moved in plan) leaves the box and keeps its new extents
+            var boxBefore = data.Box;
+            if (data.Box != Guid.Empty)
+            {
+                if (!DatumBoxElement.TryOutline(doc, data.Box, out var outline))
+                    data.Box = Guid.Empty;
+                else
+                {
+                    var boxed = Normalize(outline, z);
+                    if (!SamePolyline(boxed, normalized, ctx.Tol))
+                    {
+                        var before = ElementIO.Unflatten(data.Points);
+                        if (before.Count > 0 && !DatumBoxElement.SamePlan(new Polyline(before), normalized, ctx.Tol))
+                            data.Box = Guid.Empty;
+                        else
+                            normalized = boxed;
+                    }
+                }
+            }
             if (!SamePolyline(normalized, pl, ctx.Tol))
             {
                 if (doc.Objects.Replace(obj.Id, new PolylineCurve(normalized), true))
@@ -201,6 +238,7 @@ namespace Skunk.Elements
             {
                 data.Name = UniqueName(doc, NextName(doc), obj.Id);
                 data.Heads.Clear();
+                data.Lines.Clear();
                 data.CPlane = "";
             }
             else if (!string.IsNullOrWhiteSpace(attrName) && attrName != data.Name)
@@ -217,6 +255,8 @@ namespace Skunk.Elements
 
             if (SyncHeads(ctx, obj, data, type, normalized))
                 changed = true;
+            if (SyncLines(ctx, obj, data, type, normalized))
+                changed = true;
             SyncCPlane(ctx, data, z);
 
             var a = obj.Attributes.Duplicate();
@@ -224,6 +264,9 @@ namespace Skunk.Elements
                 a.Name = data.Name;
             Styles.ApplyTypeAttributes(a, type);
             ApplyLinePattern(doc, a, string.IsNullOrEmpty(data.LinePattern) ? type.LinePattern : data.LinePattern, type.LinePatternScale);
+            // the footprint shows in model views but does not print: the level lines print instead (SyncLines)
+            a.PlotWeightSource = ObjectPlotWeightSource.PlotWeightFromObject;
+            a.PlotWeight = -1;
             data.Id = obj.Id;
             a.SetUserString(Keys.Kind, ElementKind.Level.ToString());
             a.SetUserString(Keys.Data, Json.Write(data));
@@ -232,18 +275,23 @@ namespace Skunk.Elements
                 doc.Objects.ModifyAttributes(obj, a, true);
                 changed = true;
             }
+            // a level that moved up or down, joined or left a datum box: the box fits its levels again
+            if (data.Box != Guid.Empty && (double.IsNaN(zBefore) || Math.Abs(z - zBefore) > ctx.Tol || boxBefore != data.Box))
+                DatumBoxElement.Fit(ctx, data.Box);
+            if (boxBefore != Guid.Empty && boxBefore != data.Box)
+                DatumBoxElement.Fit(ctx, boxBefore);
             return changed;
         }
 
         static bool SameAttributes(ObjectAttributes a, ObjectAttributes b) =>
             a.Name == b.Name && a.GetUserString(Keys.Data) == b.GetUserString(Keys.Data) &&
             a.GetUserString(Keys.Kind) == b.GetUserString(Keys.Kind) && a.ColorSource == b.ColorSource &&
-            a.ObjectColor == b.ObjectColor && a.PlotWeightSource == b.PlotWeightSource &&
+            a.ObjectColor == b.ObjectColor && a.PlotWeightSource == b.PlotWeightSource && Math.Abs(a.PlotWeight - b.PlotWeight) < 1e-9 &&
             a.LinetypeSource == b.LinetypeSource && a.LinetypeIndex == b.LinetypeIndex &&
             Math.Abs(a.LinetypePatternScale - b.LinetypePatternScale) < 1e-12;
 
         /// <summary>The level line's linetype: a named linetype, or the layer's (Skunk Datum).</summary>
-        static void ApplyLinePattern(RhinoDoc doc, ObjectAttributes a, string pattern, double scale)
+        internal static void ApplyLinePattern(RhinoDoc doc, ObjectAttributes a, string pattern, double scale)
         {
             if (Styles.TryLinetype(doc, pattern, out int index))
             {
@@ -255,7 +303,11 @@ namespace Skunk.Elements
             a.LinetypePatternScale = scale > 0 ? scale : 1.0;
         }
 
-        /// <summary>The user moved or edited a level head: a vertical move moves the level, anything else snaps back.</summary>
+        /// <summary>
+        /// The user moved or edited a level head. Dragged up or down, it moves the level. Dragged sideways, it moves
+        /// that end of the level (the level line gets longer or shorter there) and takes the level out of its datum
+        /// box. The way the drag mostly went wins; anything else snaps back.
+        /// </summary>
         public static void HeadEdited(UpdateContext ctx, RhinoObject head)
         {
             var doc = ctx.Doc;
@@ -276,15 +328,114 @@ namespace Skunk.Elements
             var pts = SpotElement.Fingerprint(head.Geometry);
             if (pts.Count > 0)
             {
-                double dz = pts[0].Z - expected.Z;
-                if (Math.Abs(dz) > ctx.Tol)
+                var moved = pts[0] - expected;
+                var sideways = new Vector3d(moved.X, moved.Y, 0);
+                if (sideways.Length > ctx.Tol && sideways.Length >= Math.Abs(moved.Z))
                 {
-                    doc.Objects.Transform(level.Id, Transform.Translation(0, 0, dz), true);
+                    var dragged = DragEnd(Normalize(pl, pl[0].Z), hd.Edge, hd.End, sideways, ctx.Tol);
+                    if (dragged != null)
+                    {
+                        var box = data.Box;
+                        data.Box = Guid.Empty;
+                        ElementIO.Write(doc, level, ElementKind.Level, data);
+                        if (doc.Objects.Replace(level.Id, new PolylineCurve(dragged), true))
+                            ctx.Modified++;
+                        Update(ctx, doc.Objects.FindId(level.Id), UpdateReason.Self);
+                        DatumBoxElement.Fit(ctx, box);
+                        return;
+                    }
+                }
+                else if (Math.Abs(moved.Z) > ctx.Tol)
+                {
+                    doc.Objects.Transform(level.Id, Transform.Translation(0, 0, moved.Z), true);
                     ctx.Modified++;
                     level = doc.Objects.FindId(level.Id);
                 }
             }
             Update(ctx, level, UpdateReason.Self);
+        }
+
+        /// <summary>
+        /// A level's extents after one of its heads was dragged sideways by <paramref name="drag"/> (in plan). The
+        /// part of the drag along the head's side moves the next side out or in, so the level line gets longer or
+        /// shorter at that end; the part across moves the head's own side. Null when the drag would fold the level
+        /// over or collapse a side.
+        /// </summary>
+        public static Polyline DragEnd(Polyline pl, int edge, int end, Vector3d drag, double tol)
+        {
+            int n = pl.SegmentCount;
+            if (n < 3 || edge < 0 || edge >= n)
+                return null;
+            var u = pl[edge + 1] - pl[edge];
+            u.Z = 0;
+            if (!u.Unitize())
+                return null;
+            var outward = end == 1 ? -u : u;
+            // the outward normal of a counter-clockwise footprint's side
+            var normal = new Vector3d(u.Y, -u.X, 0);
+            double along = drag * outward, across = drag * normal;
+            var pts = new Point3d[n];
+            for (int i = 0; i < n; i++)
+                pts[i] = pl[i];
+            void Move(int i, Vector3d v) => pts[((i % n) + n) % n] += v;
+            // the next side past the head: edge + 1 at End 2, edge - 1 at End 1
+            int a = end == 2 ? edge + 1 : edge - 1, b = end == 2 ? edge + 2 : edge;
+            Move(a, outward * along);
+            Move(b, outward * along);
+            Move(edge, normal * across);
+            Move(edge + 1, normal * across);
+            var result = new Polyline(pts) { pts[0] };
+            double area = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (result[i].DistanceTo(result[i + 1]) <= tol)
+                    return null;
+                area += result[i].X * result[i + 1].Y - result[i + 1].X * result[i].Y;
+            }
+            return area > tol * tol ? result : null;
+        }
+
+        /// <summary>
+        /// When a level takes new extents with as many sides (joining a datum box), each new side takes the head
+        /// flags of the old side that faces the same way, so the heads stay on the sides they were on.
+        /// </summary>
+        public static void MapHeads(LevelData d, Polyline before, Polyline after)
+        {
+            int n = before.SegmentCount;
+            if (n == 0 || after.SegmentCount != n)
+                return;
+            Vector3d Dir(Polyline p, int e)
+            {
+                var v = p[e + 1] - p[e];
+                v.Z = 0;
+                v.Unitize();
+                return v;
+            }
+            int best = 0;
+            double bestScore = double.MinValue;
+            for (int s = 0; s < n; s++)
+            {
+                double score = 0;
+                for (int i = 0; i < n; i++)
+                    score += Dir(before, i) * Dir(after, (i + s) % n);
+                if (score > bestScore + 1e-9)
+                {
+                    bestScore = score;
+                    best = s;
+                }
+            }
+            if (best == 0)
+                return;
+            var end1 = new List<bool>();
+            var end2 = new List<bool>();
+            for (int j = 0; j < n; j++)
+            {
+                int i = ((j - best) % n + n) % n;
+                end1.Add(i < d.End1.Count && d.End1[i]);
+                end2.Add(i < d.End2.Count && d.End2[i]);
+            }
+            d.End1 = end1;
+            d.End2 = end2;
         }
 
         /// <summary>The user deleted a head: turn that head off (heads are hidden, not deleted).</summary>
@@ -303,6 +454,48 @@ namespace Skunk.Elements
                 list[edge] = false;
             ElementIO.Write(ctx.Doc, level, ElementKind.Level, data);
             ctx.Modified++;
+        }
+
+        /// <summary>The user moved or edited a level line: a vertical move moves the level, anything else snaps back.</summary>
+        public static void LineEdited(UpdateContext ctx, RhinoObject line)
+        {
+            var doc = ctx.Doc;
+            var ld = ElementIO.Read<HeadData>(line);
+            var level = ld == null ? null : ElementIO.Find(doc, ld.Level);
+            var data = level == null ? null : ElementIO.Read<LevelData>(level);
+            if (data == null || !data.Lines.TryGetValue(LineKey(ld.Edge), out Guid owned) || owned != line.Id)
+            {
+                // orphan or copied line: lines are derived from their level
+                doc.Objects.Delete(line, true, true);
+                ctx.Modified++;
+                return;
+            }
+            if (line.Geometry is Curve c && TryFootprint(level.Geometry, out var pl))
+            {
+                double dz = c.PointAtStart.Z - pl[0].Z;
+                if (Math.Abs(dz) > ctx.Tol)
+                {
+                    doc.Objects.Transform(level.Id, Transform.Translation(0, 0, dz), true);
+                    ctx.Modified++;
+                    level = doc.Objects.FindId(level.Id);
+                }
+            }
+            Update(ctx, level, UpdateReason.Self);
+        }
+
+        /// <summary>
+        /// The user deleted a level line. It is part of the level and comes back; turning off the heads of that
+        /// direction removes it.
+        /// </summary>
+        public static void LineDeleted(UpdateContext ctx, Guid levelId, int edge, Guid lineId)
+        {
+            var level = ElementIO.Find(ctx.Doc, levelId);
+            var data = level == null ? null : ElementIO.Read<LevelData>(level);
+            if (data == null || !data.Lines.TryGetValue(LineKey(edge), out Guid owned) || owned != lineId)
+                return;
+            data.Lines.Remove(LineKey(edge));
+            ElementIO.Write(ctx.Doc, level, ElementKind.Level, data);
+            Update(ctx, ctx.Doc.Objects.FindId(levelId), UpdateReason.Self);
         }
 
         /// <summary>Which ends of the level line carry a head ("Show head at End 1 / End 2").</summary>
@@ -371,12 +564,12 @@ namespace Skunk.Elements
             return Update(ctx, ctx.Doc.Objects.FindId(id), UpdateReason.Self);
         }
 
-        /// <summary>The level was deleted: delete its heads and its named CPlane.</summary>
+        /// <summary>The level was deleted: delete its heads, its level lines and its named CPlane.</summary>
         public static void Deleted(UpdateContext ctx, Guid levelId, LevelData data)
         {
             if (data == null)
                 return;
-            foreach (var id in data.Heads.Values.ToList())
+            foreach (var id in data.Heads.Values.Concat(data.Lines.Values).ToList())
             {
                 var head = ElementIO.Find(ctx.Doc, id);
                 if (head != null)
@@ -517,6 +710,122 @@ namespace Skunk.Elements
             return changed;
         }
 
+        // ---- printed level lines --------------------------------------------------------------------
+
+        /// <summary>
+        /// The level lines that print: one per elevation direction that has heads (edges parallel within about a
+        /// degree are one direction), spanning those head edges, along the first of them and in its direction, so
+        /// its dash pattern starts at the same end every time. The footprint itself does not print: seen edge-on in
+        /// an elevation, its front and back edges lie on top of each other with their dash patterns running opposite
+        /// ways, and together they print almost solid (how solid depends on the scale).
+        /// </summary>
+        static bool SyncLines(UpdateContext ctx, RhinoObject level, LevelData data, LevelType type, Polyline pl)
+        {
+            var doc = ctx.Doc;
+            bool changed = false;
+            var wanted = LineSegments(data, pl);
+            string pattern = string.IsNullOrEmpty(data.LinePattern) ? type.LinePattern : data.LinePattern;
+            foreach (var kv in wanted)
+            {
+                var ld = new HeadData { Level = level.Id, Edge = int.Parse(kv.Key, System.Globalization.CultureInfo.InvariantCulture), End = 0, Type = type.Name };
+                RhinoObject line = data.Lines.TryGetValue(kv.Key, out Guid lid) ? ElementIO.Find(doc, lid) : null;
+                if (line != null && ElementIO.KindOf(line) == ElementKind.LevelLine)
+                {
+                    if (!(line.Geometry is LineCurve lc) || lc.PointAtStart.DistanceTo(kv.Value.From) > ctx.Tol || lc.PointAtEnd.DistanceTo(kv.Value.To) > ctx.Tol)
+                    {
+                        if (doc.Objects.Replace(line.Id, new LineCurve(kv.Value), true))
+                        {
+                            ctx.Modified++;
+                            changed = true;
+                        }
+                        line = doc.Objects.FindId(line.Id);
+                    }
+                    ld.Id = line.Id;
+                    var a = line.Attributes.Duplicate();
+                    a.Name = data.Name;
+                    Styles.ApplyTypeAttributes(a, type);
+                    ApplyLinePattern(doc, a, pattern, type.LinePatternScale);
+                    a.SetUserString(Keys.Kind, ElementKind.LevelLine.ToString());
+                    a.SetUserString(Keys.Owner, level.Id.ToString());
+                    a.SetUserString(Keys.Data, Json.Write(ld));
+                    if (!SameAttributes(a, line.Attributes))
+                    {
+                        doc.Objects.ModifyAttributes(line, a, true);
+                        changed = true;
+                    }
+                }
+                else
+                {
+                    var a = Styles.Attributes(doc, ElementKind.LevelLine, type);
+                    a.Name = data.Name;
+                    ApplyLinePattern(doc, a, pattern, type.LinePatternScale);
+                    a.SetUserString(Keys.Owner, level.Id.ToString());
+                    a = ElementIO.With(a, ElementKind.LevelLine, ld);
+                    var id = doc.Objects.AddCurve(new LineCurve(kv.Value), a);
+                    if (id != Guid.Empty)
+                    {
+                        data.Lines[kv.Key] = id;
+                        ld.Id = id;
+                        ElementIO.Write(doc, doc.Objects.FindId(id), ElementKind.LevelLine, ld);
+                        ctx.Modified++;
+                        changed = true;
+                    }
+                }
+            }
+            foreach (var key in data.Lines.Keys.ToList())
+            {
+                if (wanted.ContainsKey(key))
+                    continue;
+                var line = ElementIO.Find(doc, data.Lines[key]);
+                if (line != null)
+                {
+                    doc.Objects.Delete(line, true, true);
+                    ctx.Modified++;
+                    changed = true;
+                }
+                data.Lines.Remove(key);
+            }
+            return changed;
+        }
+
+        static string LineKey(int edge) => edge.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        /// <summary>Sine of the angle under which two edges count as one elevation direction (about one degree).</summary>
+        const double ParallelSine = 0.0175;
+
+        /// <summary>The level line of every elevation direction with heads, keyed by its first head edge.</summary>
+        public static Dictionary<string, Line> LineSegments(LevelData data, Polyline pl)
+        {
+            var groups = new List<(int First, Vector3d Dir, double Min, double Max)>();
+            for (int e = 0; e < pl.SegmentCount; e++)
+            {
+                bool head = (e < data.End1.Count && data.End1[e]) || (e < data.End2.Count && data.End2[e]);
+                if (!head)
+                    continue;
+                var d = pl[e + 1] - pl[e];
+                d.Z = 0;
+                if (!d.Unitize())
+                    continue;
+                int g = groups.FindIndex(x => Vector3d.CrossProduct(x.Dir, d).Length < ParallelSine);
+                if (g < 0)
+                {
+                    groups.Add((e, d, 0, (pl[e + 1] - pl[e]) * d));
+                    continue;
+                }
+                var grp = groups[g];
+                var origin = pl[grp.First];
+                double s0 = (pl[e] - origin) * grp.Dir, s1 = (pl[e + 1] - origin) * grp.Dir;
+                groups[g] = (grp.First, grp.Dir, Math.Min(grp.Min, Math.Min(s0, s1)), Math.Max(grp.Max, Math.Max(s0, s1)));
+            }
+            var result = new Dictionary<string, Line>();
+            foreach (var grp in groups)
+            {
+                var origin = pl[grp.First];
+                result[LineKey(grp.First)] = new Line(origin + grp.Dir * grp.Min, origin + grp.Dir * grp.Max);
+            }
+            return result;
+        }
+
         static bool Default(LevelType type, int edge) =>
             type.EdgesDefault == null || type.EdgesDefault.Length == 0 || (edge < type.EdgesDefault.Length && type.EdgesDefault[edge]);
 
@@ -528,6 +837,12 @@ namespace Skunk.Elements
                 list.RemoveAt(list.Count - 1);
         }
 
+        /// <summary>
+        /// A level head: the type's symbol as the arrowhead at the end of the level line, the tail as the
+        /// leader's landing, then the text. Symbol, tail, gap and text are all dimension style lengths, so
+        /// Rhino scales them together in every view and detail and the head prints at its type size at any
+        /// scale. The leader's own segment is only a stub that sets the direction (outward along the edge).
+        /// </summary>
         static Leader HeadLeader(UpdateContext ctx, LevelType type, DimensionStyle style, Point3d a, Point3d b, int end, string text, out Point3d[] pts)
         {
             pts = null;
@@ -539,14 +854,12 @@ namespace Skunk.Elements
             var dir = end == 1 ? -u : u;
             // X along the edge, Y up: the normal (X x Y) faces outward for a counter-clockwise footprint
             var plane = new Plane(vertex, u, Vector3d.ZAxis);
-            double length = Math.Max(DocUnits.PaperToModel(ctx.Doc, type.HeadLengthMM), ctx.Tol * 100);
-            var tail = vertex + dir * length;
-            pts = new[] { vertex, tail };
-            var leader = Leader.Create(text, plane, style, pts);
-            if (leader != null && leader.LeaderHasLanding)
-                leader.LeaderHasLanding = false;
-            return leader;
+            pts = new[] { vertex, vertex + dir * HeadStub(ctx) };
+            return Leader.Create(text, plane, style, pts);
         }
+
+        /// <summary>Model length of a head leader's own segment: a few tolerances, invisible at any print scale.</summary>
+        public static double HeadStub(UpdateContext ctx) => Math.Max(ctx.Tol * 4, 1e-9);
 
         static void SyncCPlane(UpdateContext ctx, LevelData data, double z)
         {

@@ -56,6 +56,10 @@ namespace Skunk.Service
             }
             if (!site.ProjectFromCPlane || !site.SurveyFromCPlane)
                 dirty = true;
+            // a plane edited on its named CPlane (Rhino's Named CPlanes panel) is saved like any other change: the last
+            // known planes stay current, and Rhino's north follows a true north turned there (SiteModel.Save)
+            if (Moved(site.Project, data.PbpPlane, tol) || Moved(site.Survey, data.SpPlane, tol))
+                dirty = true;
             if (dirty)
                 site.Save(doc);
 
@@ -67,6 +71,13 @@ namespace Skunk.Service
 
             string after = site.Signature();
             return after != before || (lastSignature != null && after != lastSignature);
+        }
+
+        /// <summary>A site plane is no longer where it was last saved (never saved: not moved).</summary>
+        static bool Moved(Plane now, double[] stored, double tol)
+        {
+            var saved = SiteModel.PlaneFrom(stored);
+            return saved.HasValue && (now.Origin.DistanceTo(saved.Value.Origin) > tol || (now.YAxis - saved.Value.YAxis).Length > 1e-9);
         }
 
         static void EnsureMarker(RhinoDoc doc, ref Guid id, ElementKind kind, Point3d location, string name, double tol, ref bool dirty)

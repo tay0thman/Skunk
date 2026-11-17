@@ -18,8 +18,8 @@ namespace Skunk.UI
     /// </summary>
     public sealed class TypePropertiesDialog : Dialog<bool>
     {
-        static readonly ElementKind[] Families = { ElementKind.SpotElevation, ElementKind.SpotCoordinate, ElementKind.SpotSlope, ElementKind.Level, ElementKind.NorthArrow };
-        static readonly string[] FamilyNames = { "Spot Elevations", "Spot Coordinates", "Spot Slopes", "Levels", "North Arrows" };
+        static readonly ElementKind[] Families = { ElementKind.SpotElevation, ElementKind.SpotCoordinate, ElementKind.SpotSlope, ElementKind.Level, ElementKind.Grid, ElementKind.NorthArrow };
+        static readonly string[] FamilyNames = { "Spot Elevations", "Spot Coordinates", "Spot Slopes", "Levels", "Grids", "North Arrows" };
 
         readonly RhinoDoc _doc;
         readonly TypeLibrary _lib;
@@ -46,7 +46,7 @@ namespace Skunk.UI
             Title = "Skunk - Type Properties";
             Resizable = true;
             MinimumSize = new Size(460, 520);
-            ClientSize = new Size(520, 680);
+            ClientSize = new Size(780, 680);
             Padding = new Padding(10);
             EtoKit.Style(this);
 
@@ -200,6 +200,7 @@ namespace Skunk.UI
             foreach (var o in ElementIO.All(_doc, t.Kind))
             {
                 string name = t.Kind == ElementKind.Level ? ElementIO.Read<LevelData>(o)?.Type :
+                              t.Kind == ElementKind.Grid ? ElementIO.Read<GridData>(o)?.Type :
                               t.Kind == ElementKind.NorthArrow ? ElementIO.Read<NorthArrowData>(o)?.Type : ElementIO.Read<SpotData>(o)?.Type;
                 if (string.Equals(name, t.Name, StringComparison.OrdinalIgnoreCase))
                     return true;
@@ -239,6 +240,12 @@ namespace Skunk.UI
                             case ElementKind.NorthArrow:
                                 {
                                     var d = ElementIO.Read<NorthArrowData>(o);
+                                    if (d != null && renames.TryGetValue(d.Type ?? "", out var n)) { d.Type = n; ElementIO.Write(_doc, o, kind, d); }
+                                    break;
+                                }
+                            case ElementKind.Grid:
+                                {
+                                    var d = ElementIO.Read<GridData>(o);
                                     if (d != null && renames.TryGetValue(d.Type ?? "", out var n)) { d.Type = n; ElementIO.Write(_doc, o, kind, d); }
                                     break;
                                 }

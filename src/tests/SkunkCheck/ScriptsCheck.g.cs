@@ -20,6 +20,26 @@ namespace SkunkCheck
             __rhino_command_result__ = SkunkEntry.SkLevels(__rhino_doc__, __rhino_runmode__, __rhino_command__);
         }
 
+        internal static void SkGrid()
+        {
+            __rhino_command_result__ = SkunkEntry.SkGrid(__rhino_doc__, __rhino_runmode__, __rhino_command__);
+        }
+
+        internal static void SkRenumberGrids()
+        {
+            __rhino_command_result__ = SkunkEntry.SkRenumberGrids(__rhino_doc__, __rhino_runmode__, __rhino_command__);
+        }
+
+        internal static void SkGridBubbles()
+        {
+            __rhino_command_result__ = SkunkEntry.SkGridBubbles(__rhino_doc__, __rhino_runmode__, __rhino_command__);
+        }
+
+        internal static void SkDatumBox()
+        {
+            __rhino_command_result__ = SkunkEntry.SkDatumBox(__rhino_doc__, __rhino_runmode__, __rhino_command__);
+        }
+
         internal static void SkGoToLevel()
         {
             __rhino_command_result__ = SkunkEntry.SkGoToLevel(__rhino_doc__, __rhino_runmode__, __rhino_command__);
@@ -120,6 +140,11 @@ namespace SkunkCheck
             __rhino_command_result__ = SkunkEntry.Skunk(__rhino_doc__, __rhino_runmode__, __rhino_command__);
         }
 
+        internal static void SkAbout()
+        {
+            __rhino_command_result__ = SkunkEntry.SkAbout(__rhino_doc__, __rhino_runmode__, __rhino_command__);
+        }
+
         internal static void SkOrientView()
         {
             __rhino_command_result__ = SkunkEntry.SkOrientView(__rhino_doc__, __rhino_runmode__, __rhino_command__);
@@ -130,8 +155,8 @@ namespace SkunkCheck
             __rhino_command_result__ = SkunkEntry.SkShowSite(__rhino_doc__, __rhino_runmode__, __rhino_command__);
         }
 
-        internal static int Count => 24;
+        internal static int Count => 29;
 
-        internal static readonly string[] Names = { "SkLevel", "SkLevels", "SkGoToLevel", "SkAttachToLevel", "SkDetachFromLevel", "SkSpotElevation", "SkSpotCoordinate", "SkSpotSlope", "SkNorthArrow", "SkEditType", "SkProperties", "SkLocation", "SkProjectBasePoint", "SkSurveyPoint", "SkSpecifyCoordinates", "SkReportCoordinates", "SkImportSharedCoordinates", "SkRotateTrueNorth", "SkRotateProjectNorth", "SkUpdate", "SkSettings", "Skunk", "SkOrientView", "SkShowSite" };
+        internal static readonly string[] Names = { "SkLevel", "SkLevels", "SkGrid", "SkRenumberGrids", "SkGridBubbles", "SkDatumBox", "SkGoToLevel", "SkAttachToLevel", "SkDetachFromLevel", "SkSpotElevation", "SkSpotCoordinate", "SkSpotSlope", "SkNorthArrow", "SkEditType", "SkProperties", "SkLocation", "SkProjectBasePoint", "SkSurveyPoint", "SkSpecifyCoordinates", "SkReportCoordinates", "SkImportSharedCoordinates", "SkRotateTrueNorth", "SkRotateProjectNorth", "SkUpdate", "SkSettings", "Skunk", "SkAbout", "SkOrientView", "SkShowSite" };
     }
 }

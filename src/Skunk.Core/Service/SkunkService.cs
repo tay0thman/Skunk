@@ -47,8 +47,17 @@ namespace Skunk.Service
             public string SiteSignature;
             /// <summary>Rhino changed the model units and scaled everything by this (applied at the next processing).</summary>
             public double UnitScale = 1;
+            /// <summary>The annotation scale and Rhino's scaling switch as last seen (see CheckAnnotationScale).</summary>
+            public string ScaleKey;
+            /// <summary>The layout details as last seen (see CheckGridViews); Views asks for their grid overrides again.</summary>
+            public string ViewsKey;
+            public bool Views;
+            /// <summary>True north after the last processing: an undo that turns it back takes Rhino's north along (PostUndoSync).</summary>
+            public Rhino.Geometry.Vector3d? TrueNorth;
+            /// <summary>The model's geographic location as last seen (see CheckGeoLocation).</summary>
+            public string GeoKey;
 
-            public bool Pending => Changed.Count > 0 || Deleted.Count > 0 || Full || Context || UnitScale != 1;
+            public bool Pending => Changed.Count > 0 || Deleted.Count > 0 || Full || Context || UnitScale != 1 || Views;
         }
 
         public static SkunkService Instance { get; private set; }
@@ -65,6 +74,7 @@ namespace Skunk.Service
         bool _subscribed;
         bool _uiDirty;
         MarkerConduit _conduit;
+        DatumBoxConduit _boxConduit;
 
         public bool Running => _subscribed;
 
@@ -101,6 +111,8 @@ namespace Skunk.Service
             Unsubscribe();
             if (_conduit != null)
                 _conduit.Enabled = false;
+            if (_boxConduit != null)
+                _boxConduit.Enabled = false;
         }
 
         void Subscribe()
@@ -127,6 +139,8 @@ namespace Skunk.Service
             {
                 _conduit = _conduit ?? new MarkerConduit();
                 _conduit.Enabled = true;
+                _boxConduit = _boxConduit ?? new DatumBoxConduit();
+                _boxConduit.Enabled = true;
             }
             _subscribed = true;
         }
@@ -186,6 +200,69 @@ namespace Skunk.Service
             State(doc).Context = true;
             _uiDirty = true;
         }
+
+        /// <summary>
+        /// The annotation scale (Rhino's model space scale, or Skunk's own when Rhino's scaling is off) or
+        /// Rhino's annotation scaling switch changed outside Skunk - Document Properties raises no event -
+        /// so every element is refreshed (north arrow sizes, styles, the linetype display scale). The idle
+        /// loop checks the active model twice a second; tests call this directly. True when it asked for
+        /// a refresh.
+        /// </summary>
+        public bool CheckAnnotationScale(RhinoDoc doc)
+        {
+            if (doc == null)
+                return false;
+            var st = State(doc);
+            string key = ScaleKey(doc);
+            bool changed = st.ScaleKey != null && st.ScaleKey != key;
+            st.ScaleKey = key;
+            if (changed)
+            {
+                st.Context = true;
+                _uiDirty = true;
+            }
+            return changed;
+        }
+
+        /// <summary>
+        /// A layout detail was added, removed or turned (Rhino raises no event for that): grids get their Hide in Detail
+        /// overrides again, so each detail shows them the way it reads (GridViews). The idle loop checks the active
+        /// model twice a second when it has grids; tests call this directly. True when it asked for an update.
+        /// </summary>
+        public bool CheckGridViews(RhinoDoc doc)
+        {
+            if (doc == null || Index(doc).Grids.Count == 0)
+                return false;
+            var st = State(doc);
+            string key = GridViews.Signature(GridViews.Details(doc));
+            bool changed = st.ViewsKey != key;
+            st.ViewsKey = key;
+            if (changed)
+                st.Views = true;
+            return changed;
+        }
+
+        /// <summary>
+        /// The model's geographic location or Rhino's north changed (the Sun panel raises no event Skunk sees): the Skunk
+        /// Attributes panel shows them, so it refreshes. The idle loop checks the active model twice a second; tests call
+        /// this directly. True when it asked for a refresh.
+        /// </summary>
+        public bool CheckGeoLocation(RhinoDoc doc)
+        {
+            if (doc == null)
+                return false;
+            var st = State(doc);
+            string key = GeoLocation.Read(doc).Signature();
+            bool changed = st.GeoKey != null && st.GeoKey != key;
+            st.GeoKey = key;
+            if (changed)
+                _uiDirty = true;
+            return changed;
+        }
+
+        static string ScaleKey(RhinoDoc doc) =>
+            DocUnits.RhinoScalesAnnotation(doc) + ":" + DocUnits.AnnotationScale(doc).ToString("R", System.Globalization.CultureInfo.InvariantCulture) +
+            ":" + DocUnits.StyleModelSpaceScale(doc).ToString("R", System.Globalization.CultureInfo.InvariantCulture);
 
         /// <summary>Ask for a full rebuild of the dependency index and all elements.</summary>
         public void FullUpdate(RhinoDoc doc)
@@ -442,6 +519,13 @@ namespace Skunk.Service
                 {
                     _lastSiteCheck = _clock.ElapsedMilliseconds;
                     var active = RhinoDoc.ActiveDoc;
+                    // nor does the annotation scale in Document Properties, nor a layout detail that was added or turned
+                    if (active != null && _docs.ContainsKey(active.RuntimeSerialNumber))
+                    {
+                        CheckAnnotationScale(active);
+                        CheckGridViews(active);
+                        CheckGeoLocation(active);
+                    }
                     if (active != null && _docs.TryGetValue(active.RuntimeSerialNumber, out var ast) && ast.SiteSignature != null)
                     {
                         var sig = SiteModel.Get(active).Signature();
@@ -481,7 +565,14 @@ namespace Skunk.Service
                 }
                 LevelElement.OwnedCPlanes.RemoveStale(doc);
             }
-            st.SiteSignature = SiteModel.Get(doc).Signature();
+            var now = SiteModel.Get(doc);
+            st.SiteSignature = now.Signature();
+            // Rhino's north is not in the undo record when its Sun keeps its own: one that went along with true north
+            // goes back with it
+            if (st.TrueNorth.HasValue)
+                using (Suppress())
+                    GeoLocation.FollowTrueNorth(doc, st.TrueNorth.Value, now.TrueNorth);
+            st.TrueNorth = now.TrueNorth;
             doc.Views.Redraw();
         }
 
@@ -529,6 +620,53 @@ namespace Skunk.Service
             }
         }
 
+        /// <summary>Levels and grids copied together with their datum box go into the copied box.</summary>
+        static void RemapBoxCopies(RhinoDoc doc, HashSet<Guid> added)
+        {
+            if (added.Count < 2)
+                return;
+            var copies = new Dictionary<Guid, Guid>();
+            foreach (var id in added)
+            {
+                var o = ElementIO.Find(doc, id);
+                if (ElementIO.KindOf(o) != ElementKind.DatumBox)
+                    continue;
+                var d = ElementIO.Read<DatumBoxData>(o);
+                if (d != null && d.Id != Guid.Empty && d.Id != o.Id)
+                    copies[d.Id] = o.Id;
+            }
+            if (copies.Count == 0)
+                return;
+            foreach (var id in added)
+            {
+                var o = ElementIO.Find(doc, id);
+                if (ElementIO.KindOf(o) != ElementKind.Level)
+                    continue;
+                var d = ElementIO.Read<LevelData>(o);
+                if (d != null && copies.TryGetValue(d.Box, out var box))
+                {
+                    d.Box = box;
+                    var a = o.Attributes.Duplicate();
+                    a.SetUserString(Keys.Data, Json.Write(d));
+                    doc.Objects.ModifyAttributes(o, a, true);
+                }
+            }
+            foreach (var id in added)
+            {
+                var o = ElementIO.Find(doc, id);
+                if (ElementIO.KindOf(o) != ElementKind.Grid)
+                    continue;
+                var d = ElementIO.Read<GridData>(o);
+                if (d != null && copies.TryGetValue(d.Box, out var box))
+                {
+                    d.Box = box;
+                    var a = o.Attributes.Duplicate();
+                    a.SetUserString(Keys.Data, Json.Write(d));
+                    doc.Objects.ModifyAttributes(o, a, true);
+                }
+            }
+        }
+
         int Process(RhinoDoc doc, DocState st)
         {
             if (!st.Pending || _processing)
@@ -538,6 +676,8 @@ namespace Skunk.Service
             var deleted = new Dictionary<Guid, DeletedInfo>(st.Deleted);
             bool full = st.Full;
             bool context = st.Context;
+            bool views = st.Views;
+            st.Views = false;
             st.Changed.Clear();
             st.Added.Clear();
             st.Deleted.Clear();
@@ -595,27 +735,65 @@ namespace Skunk.Service
                 ctx.Added.UnionWith(added);
                 bool everything = full || context || siteChanged;
 
+                // models from earlier builds get their "Skunk" layer as "__Annotations__" (once), models from 1.4.1 and
+                // earlier the paper Skunk Datum (once), and model views show linetypes at the annotation scale, as they print
+                if (everything && Layers.Migrate(doc))
+                    ctx.Modified++;
+                if (everything && Types.Styles.RepairDatum(doc))
+                    ctx.Modified++;
+                if (everything && LinetypeDisplay.Follow(doc))
+                    ctx.Modified++;
+
                 // the "Rhino dimensions on a Skunk sublayer" option: new Rhino dimensions / leaders move there
                 if (added.Count > 0)
                     modified += DimensionLayer.Apply(doc, added);
 
-                // 0. a level copied together with its attached objects / relative spots takes them along
+                // 0. a level copied together with its attached objects / relative spots takes them along, and
+                // levels copied together with their datum box go into the copy
                 RemapLevelCopies(doc, added);
+                RemapBoxCopies(doc, added);
 
-                // 1. levels: deletions, head edits, level edits
+                // 1. datum boxes and levels: deletions, box edits, head edits, level edits
+                var levels = new HashSet<Guid>();
+                var grids = new HashSet<Guid>();
+                bool levelWork = false;
                 foreach (var kv in deleted)
                 {
+                    if (kv.Value.Kind == ElementKind.Level || kv.Value.Kind == ElementKind.DatumBox)
+                        levelWork = true;
                     if (kv.Value.Kind == ElementKind.Level)
                         LevelElement.Deleted(ctx, kv.Key, Json.Read<LevelData>(kv.Value.Data));
+                    else if (kv.Value.Kind == ElementKind.DatumBox)
+                    {
+                        // its levels and grids keep their extents and leave it
+                        levels.UnionWith(DatumBoxElement.LevelIds(doc, kv.Key));
+                        grids.UnionWith(DatumBoxElement.GridIds(doc, kv.Key));
+                    }
+                    else if (kv.Value.Kind == ElementKind.Grid)
+                        GridElement.Deleted(ctx, kv.Key, Json.Read<GridData>(kv.Value.Data));
+                    else if (kv.Value.Kind == ElementKind.GridHead || kv.Value.Kind == ElementKind.GridElevation)
+                    {
+                        var gh = Json.Read<GridHeadData>(kv.Value.Data);
+                        if (gh != null && !deleted.ContainsKey(gh.Grid))
+                            GridElement.HeadDeleted(ctx, gh.Grid, gh.End, gh.Label, gh.Elevation, kv.Key);
+                    }
                     else if (kv.Value.Kind == ElementKind.LevelHead)
                     {
                         var hd = Json.Read<HeadData>(kv.Value.Data);
                         if (hd != null && !deleted.ContainsKey(hd.Level))
                             LevelElement.HeadDeleted(ctx, hd.Level, hd.Edge, hd.End, kv.Key);
                     }
+                    else if (kv.Value.Kind == ElementKind.LevelLine)
+                    {
+                        var ld = Json.Read<HeadData>(kv.Value.Data);
+                        if (ld != null && !deleted.ContainsKey(ld.Level))
+                            LevelElement.LineDeleted(ctx, ld.Level, ld.Edge, kv.Key);
+                    }
                 }
-                var levels = new HashSet<Guid>();
+                var boxes = new HashSet<Guid>();
                 var heads = new List<RhinoObject>();
+                var lines = new List<RhinoObject>();
+                var bubbles = new List<RhinoObject>();
                 foreach (var id in changed)
                 {
                     var o = ElementIO.Find(doc, id);
@@ -623,15 +801,41 @@ namespace Skunk.Service
                     {
                         case ElementKind.Level: levels.Add(id); break;
                         case ElementKind.LevelHead: heads.Add(o); break;
+                        case ElementKind.LevelLine: lines.Add(o); break;
+                        case ElementKind.DatumBox: boxes.Add(id); break;
+                        case ElementKind.Grid: grids.Add(id); break;
+                        case ElementKind.GridHead:
+                        case ElementKind.GridElevation: bubbles.Add(o); break;
                     }
                 }
                 if (everything)
+                {
                     levels.UnionWith(st.Index.Levels);
+                    boxes.UnionWith(st.Index.Boxes);
+                    grids.UnionWith(st.Index.Grids);
+                }
+                // a datum box that was moved, scaled, rotated or grip-edited gives the levels in it its new outline
+                foreach (var id in boxes)
+                {
+                    var o = ElementIO.Find(doc, id);
+                    if (o != null && DatumBoxElement.Update(ctx, o, changed.Contains(id) ? UpdateReason.Self : UpdateReason.Context))
+                    {
+                        levels.UnionWith(DatumBoxElement.LevelIds(doc, id));
+                        grids.UnionWith(DatumBoxElement.GridIds(doc, id));
+                    }
+                }
+                levelWork |= boxes.Count > 0 || levels.Count > 0 || heads.Count > 0 || lines.Count > 0;
                 foreach (var head in heads)
                 {
                     var live = ElementIO.Find(doc, head.Id);
                     if (live != null)
                         LevelElement.HeadEdited(ctx, live);
+                }
+                foreach (var line in lines)
+                {
+                    var live = ElementIO.Find(doc, line.Id);
+                    if (live != null)
+                        LevelElement.LineEdited(ctx, live);
                 }
                 var levelZBefore = new Dictionary<Guid, double>();
                 foreach (var id in levels)
@@ -642,6 +846,33 @@ namespace Skunk.Service
                     if (o != null)
                         LevelElement.Update(ctx, o, changed.Contains(id) ? UpdateReason.Self : UpdateReason.Context);
                 }
+                // every datum box fits the heights of its levels again (one moved, joined, left or was deleted)
+                if (levelWork)
+                    foreach (var id in st.Index.Boxes.ToList())
+                        DatumBoxElement.Fit(ctx, id);
+
+                // 1b. grids, after the boxes that set their ends: bubble edits, then grid edits; every grid when a level
+                // or a box changed, since grids in elevations reach from the lowest level to the highest
+                if (levelWork)
+                    grids.UnionWith(st.Index.Grids);
+                foreach (var bubble in bubbles)
+                {
+                    var live = ElementIO.Find(doc, bubble.Id);
+                    if (live != null)
+                        GridElement.HeadEdited(ctx, live);
+                }
+                // copies last, nearest their original first: an array of grids is named in turn (2, 3, 4 going away)
+                foreach (var id in GridElement.UpdateOrder(doc, grids))
+                {
+                    var o = ElementIO.Find(doc, id);
+                    if (o != null)
+                        GridElement.Update(ctx, o, changed.Contains(id) ? UpdateReason.Self : UpdateReason.Context);
+                }
+                // layout details show each grid the way it reads there: plans the plan grid, elevations the parts facing them
+                var details = GridViews.Details(doc);
+                if (details.Count > 0 && (views || grids.Count > 0))
+                    ctx.Modified += GridViews.Apply(doc, views ? st.Index.Grids.ToList() : grids.ToList(), details);
+                st.ViewsKey = GridViews.Signature(details);
 
                 // 2. spots
                 var spots = new Dictionary<Guid, UpdateReason>();
@@ -704,10 +935,17 @@ namespace Skunk.Service
                     st.Index.Refresh(doc, id);
                 foreach (var id in levels)
                     st.Index.Refresh(doc, id);
+                foreach (var id in boxes)
+                    st.Index.Refresh(doc, id);
+                foreach (var id in grids)
+                    st.Index.Refresh(doc, id);
                 st.SiteSignature = ctx.Site.Signature();
+                // a scale Skunk itself just applied (Settings) needs no second refresh
+                st.ScaleKey = ScaleKey(doc);
                 modified = ctx.Modified;
                 if (siteChanged)
                     st.SiteSignature = SiteModel.Get(doc).Signature();
+                st.TrueNorth = SiteModel.Get(doc).TrueNorth;
             }
             catch (Exception ex)
             {

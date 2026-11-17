@@ -28,6 +28,22 @@
     <InternalsVisibleTo Include="SkunkCheck" />
   </ItemGroup>
 
+  <!-- the Skunk Attributes panel's tab icon (tools/gen_project.py renders it from the SkProperties button icon) -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\SkunkAttributes.light.ico" LogicalName="Skunk.Core.Resources.SkunkAttributes.light.ico" Condition="Exists('Resources\SkunkAttributes.light.ico')" />
+    <EmbeddedResource Include="Resources\SkunkAttributes.dark.ico" LogicalName="Skunk.Core.Resources.SkunkAttributes.dark.ico" Condition="Exists('Resources\SkunkAttributes.dark.ico')" />
+  </ItemGroup>
+
+  <!--
+    The Skunk toolbar (tools/gen_project.py writes it): Skunk writes it where Rhino opens it at start-up - no package carries
+    a toolbar file (see Skunk.UI.SkunkToolbar) - and the About dialog's logo (gen_project renders it).
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\ScriptEditor\Skunk.rui" LogicalName="Skunk.Core.Resources.Skunk.rui" Condition="Exists('..\..\ScriptEditor\Skunk.rui')" />
+    <EmbeddedResource Include="Resources\Skunk.About.light.png" LogicalName="Skunk.Core.Resources.Skunk.About.light.png" Condition="Exists('Resources\Skunk.About.light.png')" />
+    <EmbeddedResource Include="Resources\Skunk.About.dark.png" LogicalName="Skunk.Core.Resources.Skunk.About.dark.png" Condition="Exists('Resources\Skunk.About.dark.png')" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(UseLocalRhino)' == 'true'">
     <Reference Include="RhinoCommon"><HintPath>$(RhinoSystemDir)\RhinoCommon.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Rhino.UI"><HintPath>$(RhinoSystemDir)\Rhino.UI.dll</HintPath><Private>false</Private></Reference>

@@ -9,8 +9,8 @@ using Skunk.Site;
 namespace Skunk.Service
 {
     /// <summary>
-    /// Keeps the lengths Skunk stores in model units (leader offsets, slope reach, level elevations, the
-    /// recorded edit-detection points, the survey point's shared coordinates) in step with Rhino's model
+    /// Keeps the lengths Skunk stores in model units (leader offsets, slope reach, level elevations, datum box
+    /// outlines, the recorded edit-detection points, the survey point's shared coordinates) in step with Rhino's model
     /// units. When Rhino changes the units and scales every object, Skunk scales its stored lengths by
     /// the same factor, so the scaled annotations are not mistaken for user edits and nothing moves twice.
     /// </summary>
@@ -77,6 +77,24 @@ namespace Skunk.Service
                 d.Points = Scaled(d.Points);
                 d.ComputationHeight *= f;
                 ElementIO.Write(doc, o, ElementKind.Level, d);
+            }
+            foreach (var o in ElementIO.All(doc, ElementKind.DatumBox))
+            {
+                var d = ElementIO.Read<DatumBoxData>(o);
+                if (d == null)
+                    continue;
+                d.Points = Scaled(d.Points);
+                if (!double.IsNaN(d.Top))
+                    d.Top *= f;
+                ElementIO.Write(doc, o, ElementKind.DatumBox, d);
+            }
+            foreach (var o in ElementIO.All(doc, ElementKind.Grid))
+            {
+                var d = ElementIO.Read<GridData>(o);
+                if (d == null)
+                    continue;
+                d.Points = Scaled(d.Points);
+                ElementIO.Write(doc, o, ElementKind.Grid, d);
             }
             foreach (var o in ElementIO.All(doc, ElementKind.NorthArrow))
             {

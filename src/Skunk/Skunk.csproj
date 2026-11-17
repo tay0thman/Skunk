@@ -8,7 +8,8 @@
 
       dotnet build src\Skunk\Skunk.csproj -c Release      (or src\build-plugin.cmd)
 
-    Release builds copy Skunk.rhp + Skunk.rui to dist\ and pack dist\skunk-<version>-rh9_0-win.yak.
+    Release builds copy Skunk.rhp to dist\ and pack dist\skunk-<version>-rh9_0-win.yak. Neither carries a toolbar file: the
+    toolbar is compiled in and Skunk writes it where Rhino opens it at start-up (see Skunk.UI.SkunkToolbar).
   -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -35,6 +36,13 @@
   <ItemGroup>
     <Compile Include="..\Skunk.Core\**\*.cs" Exclude="..\Skunk.Core\obj\**;..\Skunk.Core\bin\**" />
     <EmbeddedResource Include="Resources\Skunk.ico" LogicalName="Skunk.Plugin.Resources.Skunk.ico" Condition="Exists('Resources\Skunk.ico')" />
+    <!-- the engine's sources are compiled in, not its resources: the Skunk Attributes panel's tab icons, same names as in Skunk.Core -->
+    <EmbeddedResource Include="..\Skunk.Core\Resources\SkunkAttributes.light.ico" LogicalName="Skunk.Core.Resources.SkunkAttributes.light.ico" Condition="Exists('..\Skunk.Core\Resources\SkunkAttributes.light.ico')" />
+    <EmbeddedResource Include="..\Skunk.Core\Resources\SkunkAttributes.dark.ico" LogicalName="Skunk.Core.Resources.SkunkAttributes.dark.ico" Condition="Exists('..\Skunk.Core\Resources\SkunkAttributes.dark.ico')" />
+    <!-- the toolbar and the About dialog's logo, same names as in Skunk.Core -->
+    <EmbeddedResource Include="..\..\ScriptEditor\Skunk.rui" LogicalName="Skunk.Core.Resources.Skunk.rui" Condition="Exists('..\..\ScriptEditor\Skunk.rui')" />
+    <EmbeddedResource Include="..\Skunk.Core\Resources\Skunk.About.light.png" LogicalName="Skunk.Core.Resources.Skunk.About.light.png" Condition="Exists('..\Skunk.Core\Resources\Skunk.About.light.png')" />
+    <EmbeddedResource Include="..\Skunk.Core\Resources\Skunk.About.dark.png" LogicalName="Skunk.Core.Resources.Skunk.About.dark.png" Condition="Exists('..\Skunk.Core\Resources\Skunk.About.dark.png')" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseLocalRhino)' == 'true'">
@@ -46,7 +54,7 @@
     <PackageReference Include="RhinoCommon" Version="$(RhinoCommonVersion)" ExcludeAssets="runtime" />
   </ItemGroup>
 
-  <!-- dist\Skunk.rhp + Skunk.rui (drag Skunk.rhp onto Rhino) and the Yak package (staged outside the synced folder). -->
+  <!-- dist\Skunk.rhp (drag it onto Rhino) and the Yak package (staged outside the synced folder); no toolbar file in either -->
   <Target Name="PackagePlugin" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
     <RemoveDir Directories="$(YakStage)" />
     <MakeDir Directories="$(YakStage);$(DistDir)" />
@@ -55,13 +63,12 @@
       <Output TaskParameter="CopiedFiles" ItemName="SkunkRhpCopied" />
     </Copy>
     <Warning Condition="'@(SkunkRhpCopied)' == ''" Text="dist\Skunk.rhp is in use (Rhino has Skunk loaded) and was NOT replaced. Close Rhino and run src\build-plugin.cmd again; the next Rhino start then loads the new version. The .yak in dist is up to date." />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\ScriptEditor\Skunk.rui" DestinationFolder="$(DistDir)" ContinueOnError="true" Retries="0" />
-    <Copy SourceFiles="$(TargetPath);$(MSBuildProjectDirectory)\..\..\ScriptEditor\Skunk.rui;package\manifest.yml;package\icon.png" DestinationFolder="$(YakStage)" />
+    <Copy SourceFiles="$(TargetPath);package\manifest.yml;package\icon.png" DestinationFolder="$(YakStage)" />
     <Exec Command="&quot;$(RhinoSystemDir)\Yak.exe&quot; build --platform win" WorkingDirectory="$(YakStage)" Condition="Exists('$(RhinoSystemDir)\Yak.exe')" />
     <ItemGroup>
       <SkunkYak Include="$(YakStage)\*.yak" />
     </ItemGroup>
     <Copy SourceFiles="@(SkunkYak)" DestinationFolder="$(DistDir)" />
-    <Message Importance="high" Text="Skunk.rhp, Skunk.rui, @(SkunkYak->'%(Filename)%(Extension)') -> dist" />
+    <Message Importance="high" Text="Skunk.rhp, @(SkunkYak->'%(Filename)%(Extension)') -> dist" />
   </Target>
 </Project>

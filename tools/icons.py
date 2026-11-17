@@ -106,6 +106,52 @@ def _(P, S, H):
     return out
 
 
+@icon("datum_box")
+def _(P, S, H):
+    # a dashed box with corner grips holding two level lines; their heads sit outside it
+    out = (f'<rect x="2.5" y="3" width="13" height="18" fill="none" stroke="{P}" stroke-width="1.1" '
+           f'stroke-dasharray="2.2 1.3"/>')
+    for x, y in ((2.5, 3), (15.5, 3), (2.5, 21), (15.5, 21)):
+        out += f'<rect x="{x - 1.4}" y="{y - 1.4}" width="2.8" height="2.8" fill="{P}"/>'
+    for y in (8.5, 15.5):
+        out += (f'<line x1="2.5" y1="{y}" x2="15.5" y2="{y}" stroke="{P}" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/>'
+                + _target(19.6, y, 2.7, P, sw=1.1))
+    return out
+
+
+@icon("grid")
+def _(P, S, H):
+    # two grid lines, each with its bubble (an opaque circle with the grid's name)
+    out = (f'<line x1="15" y1="9.4" x2="15" y2="23" stroke="{P}" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/>'
+           f'<line x1="8.6" y1="16" x2="23" y2="16" stroke="{P}" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/>')
+    for cx, cy, r, t in ((15, 5, 4.2, "1"), (4.4, 16, 4.0, "A")):
+        out += f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{{BG}}" stroke="{P}" stroke-width="1.2"/>' + _text(cx, cy + 2.1, t, P, 6)
+    return out
+
+
+@icon("renumber_grids")
+def _(P, S, H):
+    # three grid bubbles numbered in turn, and the direction they are numbered in
+    out = ""
+    for cx, t in ((4.4, "1"), (12, "2"), (19.6, "3")):
+        out += (f'<line x1="{cx}" y1="11.4" x2="{cx}" y2="16.4" stroke="{P}" stroke-width="1.2" stroke-dasharray="2.4 1.2"/>'
+                f'<circle cx="{cx}" cy="7.4" r="3.4" fill="{{BG}}" stroke="{P}" stroke-width="1.1"/>' + _text(cx, 9.3, t, P, 5.3))
+    out += f'<line x1="2.2" y1="20.4" x2="18.4" y2="20.4" stroke="{P}" stroke-width="1.3"/>' + _arrow_head(21.6, 20.4, 0, P, 3.6)
+    return out
+
+
+@icon("grid_bubbles")
+def _(P, S, H):
+    # a grid cross with bubbles on the top and left, and the bottom and right ones it can also show (hints)
+    out = (f'<line x1="13" y1="7" x2="13" y2="17.6" stroke="{P}" stroke-width="1.2" stroke-dasharray="2.4 1.2"/>'
+           f'<line x1="7" y1="13" x2="17.6" y2="13" stroke="{P}" stroke-width="1.2" stroke-dasharray="2.4 1.2"/>')
+    for cx, cy in ((13, 3.9), (3.9, 13)):
+        out += f'<circle cx="{cx}" cy="{cy}" r="3.1" fill="{{BG}}" stroke="{P}" stroke-width="1.2"/>'
+    for cx, cy in ((13, 20.4), (20.4, 13)):
+        out += f'<circle cx="{cx}" cy="{cy}" r="2.6" fill="{S}" stroke="{H}" stroke-width="0.9" stroke-dasharray="1.4 0.9"/>'
+    return out
+
+
 @icon("goto_level")
 def _(P, S, H):
     return (f'<path d="M2 19 L14 19 L22 13.5 L10 13.5 Z" fill="{S}" stroke="{H}" stroke-width="0.9"/>'
@@ -249,6 +295,14 @@ def _(P, S, H):
 @icon("settings")
 def _(P, S, H):
     return _gear(12, 12, 9.5, 7.2, 8, P) + f'<circle cx="12" cy="12" r="2.2" fill="none" stroke="{P}" stroke-width="1.2"/>'
+
+
+@icon("about")
+def _(P, S, H):
+    # an "i" in a circle: About Skunk
+    return (f'<circle cx="12" cy="12" r="9.6" fill="none" stroke="{P}" stroke-width="1.6"/>'
+            f'<circle cx="12" cy="7.3" r="1.45" fill="{P}"/>'
+            f'<rect x="10.75" y="10.1" width="2.5" height="8" rx="0.9" fill="{P}"/>')
 
 
 @icon("skunk")

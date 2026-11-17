@@ -34,6 +34,31 @@
         </text>
         <left_macro_id>bf0dbb7b-ff1d-589e-8def-dfe8c5cd73aa</left_macro_id>
       </tool_bar_item>
+      <tool_bar_item guid="4bc31548-2bbf-5cd4-ab5d-e48093acbcec">
+        <text>
+          <locale_1033>Grid</locale_1033>
+        </text>
+        <left_macro_id>646efcf9-4fcb-5047-8a4e-7049b983065b</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="f1b8a20f-419f-5334-a83b-da38a2d5460c">
+        <text>
+          <locale_1033>Renumber Grids</locale_1033>
+        </text>
+        <left_macro_id>15ef73f0-fa52-5482-995a-02e83e16029d</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="e1a16257-211c-554b-b0cb-9d35be5f6ea3">
+        <text>
+          <locale_1033>Grid Bubbles</locale_1033>
+        </text>
+        <left_macro_id>b199e672-211d-5aab-9e9c-2c72d007e33c</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="553d99ca-1bea-572d-9d87-95d6e9f24385">
+        <text>
+          <locale_1033>Datum Box</locale_1033>
+        </text>
+        <left_macro_id>f51f79df-84a4-5792-a959-c324b2acd102</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="a6f22df9-9193-530f-866e-88662233e762" button_style="spacer" />
       <tool_bar_item guid="bd8b056a-dcd6-5ec5-8963-cbc089d40e07">
         <text>
           <locale_1033>Go To Level</locale_1033>
@@ -66,12 +91,14 @@
         </text>
         <left_macro_id>5e04fd21-9b6e-5985-8572-ca54c14b1795</left_macro_id>
       </tool_bar_item>
+      <tool_bar_item guid="0d3b7b38-15da-57ed-afbf-f38ab8837e02" button_style="spacer" />
       <tool_bar_item guid="ff0d34fe-ee66-590f-bcff-c2fce1565545">
         <text>
           <locale_1033>North Arrow</locale_1033>
         </text>
         <left_macro_id>9fbfd537-63c5-55af-a376-6ed8b7584c83</left_macro_id>
       </tool_bar_item>
+      <tool_bar_item guid="3e997ec1-a5f7-5e5d-916e-6acb5fe08d9f" button_style="spacer" />
       <tool_bar_item guid="48ec62c1-8b42-5320-a620-7eaa4e8cce67">
         <text>
           <locale_1033>Type Properties</locale_1033>
@@ -80,7 +107,7 @@
       </tool_bar_item>
       <tool_bar_item guid="8626453b-6e1b-55c3-af8a-dfaea1b47fbd">
         <text>
-          <locale_1033>Properties</locale_1033>
+          <locale_1033>Attributes</locale_1033>
         </text>
         <left_macro_id>cbf40c1c-479d-503b-bc4d-f77ee19f5bf2</left_macro_id>
       </tool_bar_item>
@@ -104,6 +131,7 @@
         </text>
         <left_macro_id>bbc04734-49a7-5c74-950f-e9ca7ba7f354</left_macro_id>
       </tool_bar_item>
+      <tool_bar_item guid="29f5779c-212e-561c-8887-62025a93613f" button_style="spacer" />
       <tool_bar_item guid="bfe0866e-24d6-5abb-be00-bd69aae29e8e">
         <text>
           <locale_1033>Specify Coordinates</locale_1033>
@@ -122,6 +150,7 @@
         </text>
         <left_macro_id>e6b70d9d-0807-5a22-8b38-633c43feceec</left_macro_id>
       </tool_bar_item>
+      <tool_bar_item guid="5df8fab0-af4d-53ec-860e-af5df126f274" button_style="spacer" />
       <tool_bar_item guid="eaeb9657-6fda-5159-97a2-53bdbd4ec355">
         <text>
           <locale_1033>Rotate True North</locale_1033>
@@ -134,6 +163,7 @@
         </text>
         <left_macro_id>607039ef-9180-5060-9d76-b22f60c6af08</left_macro_id>
       </tool_bar_item>
+      <tool_bar_item guid="3a6244ea-b9ae-58a3-9a40-546d92db885f" button_style="spacer" />
       <tool_bar_item guid="b1070a1c-c50e-55bf-b0c0-4cb2617d0b8d">
         <text>
           <locale_1033>Update</locale_1033>
@@ -151,6 +181,12 @@
           <locale_1033>Skunk</locale_1033>
         </text>
         <left_macro_id>7946266c-ea13-5f34-88d7-19448a2f22e7</left_macro_id>
+      </tool_bar_item>
+      <tool_bar_item guid="58076a53-e93d-515f-adb9-814798d1c78e">
+        <text>
+          <locale_1033>About</locale_1033>
+        </text>
+        <left_macro_id>2236c919-af8e-58c8-a28d-2a46c75ef90a</left_macro_id>
       </tool_bar_item>
       <tool_bar_item guid="80dc3ea5-09cd-5833-8870-4bb4e08767ba" button_style="spacer" />
       <tool_bar_item guid="30e6636d-6514-5a78-9de9-38b433b9b458">
@@ -204,6 +240,54 @@
         <locale_1033>Levels: rename levels, change elevations, add a level above, go to a level</locale_1033>
       </tooltip>
       <script>! _SkLevels</script>
+    </macro_item>
+    <macro_item guid="646efcf9-4fcb-5047-8a4e-7049b983065b" bitmap_id="97faad50-ea58-5cf2-89d6-c0c31ea75c26">
+      <button_text>
+        <locale_1033>Grid</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Grid</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Grid: draw grid lines named 1, 2, 3 or A, B, C with a bubble at the end; type a new name into a bubble and the grids after it follow; drag a bubble along its grid to lengthen it; in a datum box the ends sit on the box</locale_1033>
+      </tooltip>
+      <script>! _SkGrid</script>
+    </macro_item>
+    <macro_item guid="15ef73f0-fa52-5482-995a-02e83e16029d" bitmap_id="68bdd164-3bdf-55b1-88dc-0c1464c2ab21">
+      <button_text>
+        <locale_1033>Renumber Grids</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Renumber Grids</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Renumber Grids: name grids one after another (1, 2, 3 or A, B, C) - pick them in order, or select several and draw a direction across them</locale_1033>
+      </tooltip>
+      <script>! _SkRenumberGrids</script>
+    </macro_item>
+    <macro_item guid="b199e672-211d-5aab-9e9c-2c72d007e33c" bitmap_id="8e0cdb1e-1ca0-52b4-b39c-8d08c9028af0">
+      <button_text>
+        <locale_1033>Grid Bubbles</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Grid Bubbles</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Grid Bubbles: tick Top, Bottom, Left or Right around a diagram of the grids - bubbles on those sides of the active view; in a layout detail only that detail changes</locale_1033>
+      </tooltip>
+      <script>! _SkGridBubbles</script>
+    </macro_item>
+    <macro_item guid="f51f79df-84a4-5792-a959-c324b2acd102" bitmap_id="6729bfc7-ff1f-554c-8c4f-9859cc09a556">
+      <button_text>
+        <locale_1033>Datum Box</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>Datum Box</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>Datum Box: one box holds the extents of the levels and the ends of the grids in it - move, scale or rotate the box and they follow; drag a level's head sideways, or a grid's bubble along it, to take that one out</locale_1033>
+      </tooltip>
+      <script>! _SkDatumBox</script>
     </macro_item>
     <macro_item guid="b929002d-b7bb-5e54-846e-45f68a930562" bitmap_id="4146756f-775a-57f0-bee2-4279aee11e81">
       <button_text>
@@ -315,13 +399,13 @@
     </macro_item>
     <macro_item guid="cbf40c1c-479d-503b-bc4d-f77ee19f5bf2" bitmap_id="120ba932-600e-54e3-8367-fcab83b3c129">
       <button_text>
-        <locale_1033>Properties</locale_1033>
+        <locale_1033>Attributes</locale_1033>
       </button_text>
       <menu_text>
-        <locale_1033>Properties</locale_1033>
+        <locale_1033>Attributes</locale_1033>
       </menu_text>
       <tooltip>
-        <locale_1033>Properties: the Properties palette for Skunk elements (toggle)</locale_1033>
+        <locale_1033>Skunk Attributes: the dockable panel with the type and parameters of the selected Skunk elements - opens it, or closes it when its tab is in front</locale_1033>
       </tooltip>
       <script>! _SkProperties</script>
     </macro_item>
@@ -333,7 +417,7 @@
         <locale_1033>Location</locale_1033>
       </menu_text>
       <tooltip>
-        <locale_1033>Location: project base point, survey point, angle to true north and their named CPlanes</locale_1033>
+        <locale_1033>Location: the project location (the Rhino model's geographic location and Rhino's north), project base point, survey point, angle to true north and their named CPlanes</locale_1033>
       </tooltip>
       <script>! _SkLocation</script>
     </macro_item>
@@ -465,9 +549,21 @@
         <locale_1033>Skunk</locale_1033>
       </menu_text>
       <tooltip>
-        <locale_1033>Skunk: load Skunk, start live updates and show the Skunk toolbar (add Skunk to Rhino's startup commands)</locale_1033>
+        <locale_1033>Skunk: load Skunk, start live updates and load the Skunk toolbar (add Skunk to Rhino's startup commands)</locale_1033>
       </tooltip>
       <script>! _Skunk</script>
+    </macro_item>
+    <macro_item guid="2236c919-af8e-58c8-a28d-2a46c75ef90a" bitmap_id="7dd58ad3-6847-5794-8bec-49121aa89653">
+      <button_text>
+        <locale_1033>About</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>About</locale_1033>
+      </menu_text>
+      <tooltip>
+        <locale_1033>About Skunk: version, what it does, where it is installed</locale_1033>
+      </tooltip>
+      <script>! _SkAbout</script>
     </macro_item>
     <macro_item guid="b1ccb703-6616-5992-a2c4-04ddcc9fe905" bitmap_id="8792aee1-5875-56d8-8f00-efb4737bb5f3">
       <button_text>
@@ -529,6 +625,38 @@
       </light>
       <dark>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="1.5" y1="4.5" x2="15.5" y2="4.5" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="4.5" r="2.9" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.5 4.5 L19.5 1.6 A2.9 2.9 0 0 1 22.4 4.5 Z" fill="#BBEAFF"/><path d="M19.5 4.5 L19.5 7.4 A2.9 2.9 0 0 1 16.6 4.5 Z" fill="#BBEAFF"/><line x1="1.5" y1="12" x2="15.5" y2="12" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="12" r="2.9" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.5 12 L19.5 9.1 A2.9 2.9 0 0 1 22.4 12 Z" fill="#BBEAFF"/><path d="M19.5 12 L19.5 14.9 A2.9 2.9 0 0 1 16.6 12 Z" fill="#BBEAFF"/><line x1="1.5" y1="19.5" x2="15.5" y2="19.5" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.5" cy="19.5" r="2.9" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.5 19.5 L19.5 16.6 A2.9 2.9 0 0 1 22.4 19.5 Z" fill="#BBEAFF"/><path d="M19.5 19.5 L19.5 22.4 A2.9 2.9 0 0 1 16.6 19.5 Z" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="97faad50-ea58-5cf2-89d6-c0c31ea75c26">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="15" y1="9.4" x2="15" y2="23" stroke="#4F0329" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><line x1="8.6" y1="16" x2="23" y2="16" stroke="#4F0329" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="15" cy="5" r="4.2" fill="#FFFFFF" stroke="#4F0329" stroke-width="1.2"/><text x="15" y="7.1" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="6" font-weight="700" fill="#4F0329" text-anchor="middle">1</text><circle cx="4.4" cy="16" r="4.0" fill="#FFFFFF" stroke="#4F0329" stroke-width="1.2"/><text x="4.4" y="18.1" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="6" font-weight="700" fill="#4F0329" text-anchor="middle">A</text></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="15" y1="9.4" x2="15" y2="23" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><line x1="8.6" y1="16" x2="23" y2="16" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="15" cy="5" r="4.2" fill="#2B2B2B" stroke="#BBEAFF" stroke-width="1.2"/><text x="15" y="7.1" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="6" font-weight="700" fill="#BBEAFF" text-anchor="middle">1</text><circle cx="4.4" cy="16" r="4.0" fill="#2B2B2B" stroke="#BBEAFF" stroke-width="1.2"/><text x="4.4" y="18.1" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="6" font-weight="700" fill="#BBEAFF" text-anchor="middle">A</text></svg>
+      </dark>
+    </icon>
+    <icon guid="68bdd164-3bdf-55b1-88dc-0c1464c2ab21">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="4.4" y1="11.4" x2="4.4" y2="16.4" stroke="#4F0329" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><circle cx="4.4" cy="7.4" r="3.4" fill="#FFFFFF" stroke="#4F0329" stroke-width="1.1"/><text x="4.4" y="9.3" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.3" font-weight="700" fill="#4F0329" text-anchor="middle">1</text><line x1="12" y1="11.4" x2="12" y2="16.4" stroke="#4F0329" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><circle cx="12" cy="7.4" r="3.4" fill="#FFFFFF" stroke="#4F0329" stroke-width="1.1"/><text x="12" y="9.3" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.3" font-weight="700" fill="#4F0329" text-anchor="middle">2</text><line x1="19.6" y1="11.4" x2="19.6" y2="16.4" stroke="#4F0329" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><circle cx="19.6" cy="7.4" r="3.4" fill="#FFFFFF" stroke="#4F0329" stroke-width="1.1"/><text x="19.6" y="9.3" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.3" font-weight="700" fill="#4F0329" text-anchor="middle">3</text><line x1="2.2" y1="20.4" x2="18.4" y2="20.4" stroke="#4F0329" stroke-width="1.3"/><path d="M21.60 20.40 L18.00 22.38 L18.00 18.42 Z" fill="#4F0329"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="4.4" y1="11.4" x2="4.4" y2="16.4" stroke="#BBEAFF" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><circle cx="4.4" cy="7.4" r="3.4" fill="#2B2B2B" stroke="#BBEAFF" stroke-width="1.1"/><text x="4.4" y="9.3" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.3" font-weight="700" fill="#BBEAFF" text-anchor="middle">1</text><line x1="12" y1="11.4" x2="12" y2="16.4" stroke="#BBEAFF" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><circle cx="12" cy="7.4" r="3.4" fill="#2B2B2B" stroke="#BBEAFF" stroke-width="1.1"/><text x="12" y="9.3" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.3" font-weight="700" fill="#BBEAFF" text-anchor="middle">2</text><line x1="19.6" y1="11.4" x2="19.6" y2="16.4" stroke="#BBEAFF" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><circle cx="19.6" cy="7.4" r="3.4" fill="#2B2B2B" stroke="#BBEAFF" stroke-width="1.1"/><text x="19.6" y="9.3" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="5.3" font-weight="700" fill="#BBEAFF" text-anchor="middle">3</text><line x1="2.2" y1="20.4" x2="18.4" y2="20.4" stroke="#BBEAFF" stroke-width="1.3"/><path d="M21.60 20.40 L18.00 22.38 L18.00 18.42 Z" fill="#BBEAFF"/></svg>
+      </dark>
+    </icon>
+    <icon guid="8e0cdb1e-1ca0-52b4-b39c-8d08c9028af0">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="13" y1="7" x2="13" y2="17.6" stroke="#4F0329" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><line x1="7" y1="13" x2="17.6" y2="13" stroke="#4F0329" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><circle cx="13" cy="3.9" r="3.1" fill="#FFFFFF" stroke="#4F0329" stroke-width="1.2"/><circle cx="3.9" cy="13" r="3.1" fill="#FFFFFF" stroke="#4F0329" stroke-width="1.2"/><circle cx="13" cy="20.4" r="2.6" fill="#C1B0A3" stroke="#4F0329" stroke-width="0.9" stroke-dasharray="1.4 0.9"/><circle cx="20.4" cy="13" r="2.6" fill="#C1B0A3" stroke="#4F0329" stroke-width="0.9" stroke-dasharray="1.4 0.9"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="13" y1="7" x2="13" y2="17.6" stroke="#BBEAFF" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><line x1="7" y1="13" x2="17.6" y2="13" stroke="#BBEAFF" stroke-width="1.2" stroke-dasharray="2.4 1.2"/><circle cx="13" cy="3.9" r="3.1" fill="#2B2B2B" stroke="#BBEAFF" stroke-width="1.2"/><circle cx="3.9" cy="13" r="3.1" fill="#2B2B2B" stroke="#BBEAFF" stroke-width="1.2"/><circle cx="13" cy="20.4" r="2.6" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.9" stroke-dasharray="1.4 0.9"/><circle cx="20.4" cy="13" r="2.6" fill="#C1B0A3" stroke="#BBEAFF" stroke-width="0.9" stroke-dasharray="1.4 0.9"/></svg>
+      </dark>
+    </icon>
+    <icon guid="6729bfc7-ff1f-554c-8c4f-9859cc09a556">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2.5" y="3" width="13" height="18" fill="none" stroke="#4F0329" stroke-width="1.1" stroke-dasharray="2.2 1.3"/><rect x="1.1" y="1.6" width="2.8" height="2.8" fill="#4F0329"/><rect x="14.1" y="1.6" width="2.8" height="2.8" fill="#4F0329"/><rect x="1.1" y="19.6" width="2.8" height="2.8" fill="#4F0329"/><rect x="14.1" y="19.6" width="2.8" height="2.8" fill="#4F0329"/><line x1="2.5" y1="8.5" x2="15.5" y2="8.5" stroke="#4F0329" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.6" cy="8.5" r="2.7" fill="none" stroke="#4F0329" stroke-width="1.1"/><path d="M19.6 8.5 L19.6 5.8 A2.7 2.7 0 0 1 22.3 8.5 Z" fill="#4F0329"/><path d="M19.6 8.5 L19.6 11.2 A2.7 2.7 0 0 1 16.900000000000002 8.5 Z" fill="#4F0329"/><line x1="2.5" y1="15.5" x2="15.5" y2="15.5" stroke="#4F0329" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.6" cy="15.5" r="2.7" fill="none" stroke="#4F0329" stroke-width="1.1"/><path d="M19.6 15.5 L19.6 12.8 A2.7 2.7 0 0 1 22.3 15.5 Z" fill="#4F0329"/><path d="M19.6 15.5 L19.6 18.2 A2.7 2.7 0 0 1 16.900000000000002 15.5 Z" fill="#4F0329"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2.5" y="3" width="13" height="18" fill="none" stroke="#BBEAFF" stroke-width="1.1" stroke-dasharray="2.2 1.3"/><rect x="1.1" y="1.6" width="2.8" height="2.8" fill="#BBEAFF"/><rect x="14.1" y="1.6" width="2.8" height="2.8" fill="#BBEAFF"/><rect x="1.1" y="19.6" width="2.8" height="2.8" fill="#BBEAFF"/><rect x="14.1" y="19.6" width="2.8" height="2.8" fill="#BBEAFF"/><line x1="2.5" y1="8.5" x2="15.5" y2="8.5" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.6" cy="8.5" r="2.7" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.6 8.5 L19.6 5.8 A2.7 2.7 0 0 1 22.3 8.5 Z" fill="#BBEAFF"/><path d="M19.6 8.5 L19.6 11.2 A2.7 2.7 0 0 1 16.900000000000002 8.5 Z" fill="#BBEAFF"/><line x1="2.5" y1="15.5" x2="15.5" y2="15.5" stroke="#BBEAFF" stroke-width="1.3" stroke-dasharray="3.2 1.4 1 1.4"/><circle cx="19.6" cy="15.5" r="2.7" fill="none" stroke="#BBEAFF" stroke-width="1.1"/><path d="M19.6 15.5 L19.6 12.8 A2.7 2.7 0 0 1 22.3 15.5 Z" fill="#BBEAFF"/><path d="M19.6 15.5 L19.6 18.2 A2.7 2.7 0 0 1 16.900000000000002 15.5 Z" fill="#BBEAFF"/></svg>
       </dark>
     </icon>
     <icon guid="4146756f-775a-57f0-bee2-4279aee11e81">
@@ -689,6 +817,14 @@
       </light>
       <dark>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14.6 15.6 C20.5 15.6 23.4 10.5 22 6.4 C20.9 3.1 17 1.6 14.4 3.2 C12.6 4.3 12.9 6.6 14.9 7.1 C17.4 7.7 18.3 10.2 16.4 12.3 C15.5 13.3 14.4 13.9 13.6 14.2 Z" fill="#BBEAFF"/><ellipse cx="9.4" cy="16" rx="6.8" ry="4.3" fill="#BBEAFF"/><path d="M3.6 13.2 C2.2 13.6 1.2 15 1.4 16.3 C1.6 17.4 2.9 17.9 4.4 17.6 Z" fill="#BBEAFF"/><circle cx="4.6" cy="14.9" r="2.6" fill="#BBEAFF"/><rect x="5.6" y="18.8" width="2" height="3" rx="0.8" fill="#BBEAFF"/><rect x="12" y="18.8" width="2" height="3" rx="0.8" fill="#BBEAFF"/><path d="M4.4 12.6 C8 11.2 12.4 11.7 15 13.2 C17.6 11.6 19.7 9 19.4 6.2" fill="none" stroke="#4F0329" stroke-width="1.5" stroke-linecap="round"/><circle cx="3.5" cy="14.4" r="0.6" fill="#4F0329"/></svg>
+      </dark>
+    </icon>
+    <icon guid="7dd58ad3-6847-5794-8bec-49121aa89653">
+      <light>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.6" fill="none" stroke="#493825" stroke-width="1.6"/><circle cx="12" cy="7.3" r="1.45" fill="#493825"/><rect x="10.75" y="10.1" width="2.5" height="8" rx="0.9" fill="#493825"/></svg>
+      </light>
+      <dark>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.6" fill="none" stroke="#BBEAFF" stroke-width="1.6"/><circle cx="12" cy="7.3" r="1.45" fill="#BBEAFF"/><rect x="10.75" y="10.1" width="2.5" height="8" rx="0.9" fill="#BBEAFF"/></svg>
       </dark>
     </icon>
     <icon guid="8792aee1-5875-56d8-8f00-efb4737bb5f3">

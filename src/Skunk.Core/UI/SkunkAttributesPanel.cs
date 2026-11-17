@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Eto.Drawing;
 using Eto.Forms;
 using Rhino;
 using Rhino.DocObjects;
+using Rhino.PlugIns;
+using Rhino.UI;
 using Skunk.Commands;
 using Skunk.Core;
 using Skunk.Elements;
@@ -14,13 +17,28 @@ using Skunk.Types;
 namespace Skunk.UI
 {
     /// <summary>
-    /// The Properties palette: Type Selector at the top, Edit Type, then the instance parameters
-    /// of the selection, grouped. With nothing selected it shows the project location. It follows the
-    /// Rhino selection live and applies edits immediately (each edit is one undo step).
+    /// Skunk Attributes: a Rhino panel - it docks, tabs and floats like Rhino's own Properties and Layers - with the
+    /// Type Selector at the top, Edit Type, then the instance parameters of the selection, grouped. With nothing
+    /// selected it shows the project location. It follows the Rhino selection live and applies edits immediately
+    /// (each edit is one undo step). Registered with Skunk's plug-in once a session (<see cref="Register"/>); the
+    /// SkProperties command opens it.
     /// </summary>
-    public sealed class PropertiesPalette : Form
+    [Guid("766a1bbd-ba43-5642-9313-4be87be9acaf")]
+    public sealed class SkunkAttributesPanel : Panel, IPanel
     {
-        static PropertiesPalette s_instance;
+        /// <summary>The panel's tab caption.</summary>
+        public const string Caption = "Skunk Attributes";
+
+        /// <summary>Rhino's id for the panel (fixed: Rhino keeps where it is docked under it).</summary>
+        public static Guid PanelId => typeof(SkunkAttributesPanel).GUID;
+
+        /// <summary>The tab icons embedded in Skunk.Core (tools/gen_project.py renders them from the SkProperties icon).</summary>
+        public const string IconLight = "Skunk.Core.Resources.SkunkAttributes.light.ico";
+        public const string IconDark = "Skunk.Core.Resources.SkunkAttributes.dark.ico";
+
+        static bool s_registered;
+        static bool s_hooked;
+        static SkunkAttributesPanel s_current;
 
         readonly Label _title = new Label { Font = SystemFonts.Bold(12) };
         readonly DropDown _types = new DropDown();
@@ -28,44 +46,60 @@ namespace Skunk.UI
         readonly ParamGrid _grid = new ParamGrid();
         readonly Label _status = new Label { TextColor = SystemColors.DisabledText };
         bool _loading;
+        bool _shown = true;
+        bool _dirty = true;
+        bool _forceReload;
         ElementKind _kind;
         List<RhinoObject> _selection = new List<RhinoObject>();
         RhinoDoc _doc;
 
+        /// <summary>
+        /// Register the panel with Rhino, once a session: the compiled plug-in from its OnLoad (passing itself), the
+        /// Script Editor channel with the first Skunk command (its plug-in found by id). False when Skunk's plug-in is
+        /// not loaded.
+        /// </summary>
+        public static bool Register(PlugIn plugIn = null)
+        {
+            if (s_registered)
+                return true;
+            try
+            {
+                plugIn = plugIn ?? PlugIn.Find(SkunkToolbar.PlugInId);
+                if (plugIn == null)
+                    return false;
+                string icon = Rhino.Runtime.HostUtils.RunningInDarkMode ? IconDark : IconLight;
+                Panels.RegisterPanel(plugIn, typeof(SkunkAttributesPanel), Caption, typeof(SkunkAttributesPanel).Assembly, icon, PanelType.System);
+                s_registered = true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("the " + Caption + " panel was not registered (" + ex.GetType().Name + ": " + ex.Message + ").");
+            }
+            return s_registered;
+        }
+
+        /// <summary>SkProperties: open the panel (or bring its tab to the front); close it when it is the tab in front.</summary>
         public static void Toggle(RhinoDoc doc)
         {
-            if (s_instance != null && s_instance.Visible)
+            if (!Register())
             {
-                s_instance.Close();
+                Log.Warn("Skunk's plug-in is not loaded, so the " + Caption + " panel cannot open.");
                 return;
             }
-            Open(doc);
-        }
-
-        public static void Open(RhinoDoc doc)
-        {
-            if (s_instance == null)
+            if (Panels.IsPanelVisible(PanelId, true))
             {
-                s_instance = new PropertiesPalette();
-                s_instance.Closed += (s, e) => s_instance = null;
+                Panels.ClosePanel(PanelId);
+                return;
             }
-            s_instance.Show();
-            s_instance.BringToFront();
-            s_instance.Reload(doc);
+            Panels.OpenPanel(PanelId);
+            s_current?.MarkDirty();
         }
 
-        PropertiesPalette()
+        /// <summary>Rhino makes it (one on Windows, reused for every model).</summary>
+        public SkunkAttributesPanel()
         {
-            Title = "Skunk Properties";
-            Resizable = true;
-            Minimizable = false;
-            Maximizable = false;
-            ShowInTaskbar = false;
-            MinimumSize = new Size(300, 300);
-            ClientSize = new Size(360, 560);
-            Owner = EtoKit.Owner;
-            EtoKit.Style(this);
-            Padding = new Padding(8);
+            s_current = this;
+            Padding = new Padding(6);
 
             _types.SelectedIndexChanged += (s, e) => OnTypeChanged();
             _editType.Click += (s, e) =>
@@ -102,58 +136,69 @@ namespace Skunk.UI
                     new TableRow(new TableLayout { Spacing = new Size(4, 0), Rows = { new TableRow(new TableCell(_status, true), new TableCell(location)) } }),
                 },
             };
-
-            RestorePlacement();
-            // Rhino's own events (not only the Skunk service's), so the palette stays current even when
-            // another copy of the engine handles the document events
             _grid.Edited += () => _forceReload = true;
-            SkunkService.UiRefresh += OnUiRefresh;
-            RhinoDoc.SelectObjects += OnSelection;
-            RhinoDoc.DeselectObjects += OnSelection;
-            RhinoDoc.DeselectAllObjects += OnDeselectAll;
-            RhinoDoc.ReplaceRhinoObject += OnReplace;
-            RhinoDoc.ModifyObjectAttributes += OnAttributes;
-            RhinoDoc.ActiveDocumentChanged += OnActiveDoc;
-            Rhino.Commands.Command.EndCommand += OnEndCommand;
-            RhinoApp.Idle += OnIdle;
-            Closed += (s, e) =>
-            {
-                SkunkService.UiRefresh -= OnUiRefresh;
-                RhinoDoc.SelectObjects -= OnSelection;
-                RhinoDoc.DeselectObjects -= OnSelection;
-                RhinoDoc.DeselectAllObjects -= OnDeselectAll;
-                RhinoDoc.ReplaceRhinoObject -= OnReplace;
-                RhinoDoc.ModifyObjectAttributes -= OnAttributes;
-                RhinoDoc.ActiveDocumentChanged -= OnActiveDoc;
-                Rhino.Commands.Command.EndCommand -= OnEndCommand;
-                RhinoApp.Idle -= OnIdle;
-                SavePlacement();
-            };
+            Hook();
         }
 
-        bool _dirty;
-        bool _forceReload;
+        // ---- Rhino's panel callbacks -----------------------------------------------------------------
 
-        void OnSelection(object sender, RhinoObjectSelectionEventArgs e) => _dirty = true;
-
-        void OnDeselectAll(object sender, RhinoDeselectAllObjectsEventArgs e) => _dirty = true;
-
-        void OnReplace(object sender, RhinoReplaceObjectEventArgs e) => _dirty = true;
-
-        void OnAttributes(object sender, RhinoModifyObjectAttributesEventArgs e) => _dirty = true;
-
-        void OnActiveDoc(object sender, DocumentEventArgs e) => _dirty = true;
-
-        void OnEndCommand(object sender, Rhino.Commands.CommandEventArgs e) => _dirty = true;
-
-        void OnUiRefresh(RhinoDoc doc) => _dirty = true;
-
-        void OnIdle(object sender, EventArgs e)
+        public void PanelShown(uint documentSerialNumber, ShowPanelReason reason)
         {
-            if (!Visible || _loading)
+            _shown = true;
+            _dirty = true;
+        }
+
+        public void PanelHidden(uint documentSerialNumber, ShowPanelReason reason) => _shown = false;
+
+        public void PanelClosing(uint documentSerialNumber, bool onCloseDocument) => _shown = false;
+
+        // ---- following the selection -------------------------------------------------------------
+
+        /// <summary>
+        /// Rhino's own events (not only the Skunk service's), so the panel stays current even when another copy of the
+        /// engine handles the document events. Hooked once a session and routed to the panel Rhino made last, so a panel
+        /// Rhino replaces leaves no handlers behind.
+        /// </summary>
+        static void Hook()
+        {
+            if (s_hooked)
+                return;
+            s_hooked = true;
+            SkunkService.UiRefresh += doc => s_current?.MarkDirty();
+            RhinoDoc.SelectObjects += (s, e) => s_current?.MarkDirty();
+            RhinoDoc.DeselectObjects += (s, e) => s_current?.MarkDirty();
+            RhinoDoc.DeselectAllObjects += (s, e) => s_current?.MarkDirty();
+            RhinoDoc.ReplaceRhinoObject += (s, e) => s_current?.MarkDirty();
+            RhinoDoc.ModifyObjectAttributes += (s, e) => s_current?.MarkDirty();
+            RhinoDoc.ActiveDocumentChanged += (s, e) => s_current?.MarkDirty();
+            Rhino.Commands.Command.EndCommand += (s, e) => s_current?.MarkDirty();
+            RhinoApp.Idle += (s, e) => s_current?.OnIdle();
+        }
+
+        void MarkDirty() => _dirty = true;
+
+        /// <summary>The user is typing in it (the grid or the type list has the focus): no rebuild under the cursor.</summary>
+        bool Typing
+        {
+            get
+            {
+                try
+                {
+                    return HasFocus || Children.Any(c => c.HasFocus);
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+        }
+
+        void OnIdle()
+        {
+            if (!_shown || _loading)
                 return;
             // don't rebuild under the user's cursor while they type, except right after a committed edit
-            if (_forceReload || (_dirty && !HasFocus))
+            if (_forceReload || (_dirty && !Typing))
             {
                 _dirty = false;
                 _forceReload = false;
@@ -170,16 +215,23 @@ namespace Skunk.UI
             try
             {
                 var selected = _doc.Objects.GetSelectedObjects(false, false).ToList();
-                // a level head stands for its level (clicking a head selects the level)
+                // a level head or level line stands for its level, a grid bubble for its grid
                 var resolved = new List<RhinoObject>();
                 foreach (var o in selected)
                 {
-                    if (ElementIO.KindOf(o) == ElementKind.LevelHead)
+                    if (ElementKinds.IsLevelPart(ElementIO.KindOf(o)))
                     {
                         var hd = ElementIO.Read<HeadData>(o);
                         var level = hd == null ? null : ElementIO.Find(_doc, hd.Level);
                         if (level != null && resolved.All(r => r.Id != level.Id))
                             resolved.Add(level);
+                    }
+                    else if (ElementKinds.IsGridPart(ElementIO.KindOf(o)))
+                    {
+                        var gh = ElementIO.Read<GridHeadData>(o);
+                        var grid = gh == null ? null : ElementIO.Find(_doc, gh.Grid);
+                        if (grid != null && resolved.All(r => r.Id != grid.Id))
+                            resolved.Add(grid);
                     }
                     else if (resolved.All(r => r.Id != o.Id))
                         resolved.Add(o);
@@ -211,7 +263,7 @@ namespace Skunk.UI
             }
             catch (Exception ex)
             {
-                Log.Error("properties palette", ex);
+                Log.Error(Caption + " panel", ex);
             }
             finally
             {
@@ -243,6 +295,10 @@ namespace Skunk.UI
                     return PropertyModel.NorthArrow(_doc, _selection);
                 case ElementKind.PlanCut:
                     return PropertyModel.PlanCut(_doc, _selection[0]);
+                case ElementKind.DatumBox:
+                    return PropertyModel.DatumBox(_doc, _selection[0]);
+                case ElementKind.Grid:
+                    return PropertyModel.Grid(_doc, _selection[0]);
                 case ElementKind.None:
                     return PropertyModel.Attached(_doc, _selection);
                 default:
@@ -256,6 +312,7 @@ namespace Skunk.UI
             {
                 case ElementKind.Level: return ElementIO.Read<LevelData>(o)?.Type;
                 case ElementKind.NorthArrow: return ElementIO.Read<NorthArrowData>(o)?.Type;
+                case ElementKind.Grid: return ElementIO.Read<GridData>(o)?.Type;
                 case ElementKind.SpotElevation:
                 case ElementKind.SpotCoordinate:
                 case ElementKind.SpotSlope: return ElementIO.Read<SpotData>(o)?.Type;
@@ -267,7 +324,7 @@ namespace Skunk.UI
         {
             _types.Items.Clear();
             bool typed = kind == ElementKind.SpotElevation || kind == ElementKind.SpotCoordinate || kind == ElementKind.SpotSlope ||
-                         kind == ElementKind.Level || kind == ElementKind.NorthArrow;
+                         kind == ElementKind.Level || kind == ElementKind.NorthArrow || kind == ElementKind.Grid;
             _types.Enabled = typed;
             _editType.Enabled = true;
             if (!typed)
@@ -316,6 +373,14 @@ namespace Skunk.UI
                                 NorthArrowElement.Update(ctx, _doc.Objects.FindId(id));
                                 break;
                             }
+                        case ElementKind.Grid:
+                            {
+                                var d = ElementIO.Read<GridData>(o);
+                                d.Type = name;
+                                ElementIO.Write(_doc, o, kind, d);
+                                GridElement.Update(ctx, _doc.Objects.FindId(id), UpdateReason.Context);
+                                break;
+                            }
                         default:
                             {
                                 var d = ElementIO.Read<SpotData>(o);
@@ -329,40 +394,6 @@ namespace Skunk.UI
             });
             Kit.SetLastType(kind, name);
             Reload(_doc);
-        }
-
-        void RestorePlacement()
-        {
-            try
-            {
-                var s = Rhino.PersistentSettings.RhinoAppSettings;
-                if (s.TryGetInteger("Skunk.Palette.X", out int x) && s.TryGetInteger("Skunk.Palette.Y", out int y) &&
-                    s.TryGetInteger("Skunk.Palette.W", out int w) && s.TryGetInteger("Skunk.Palette.H", out int h) && w > 100 && h > 100)
-                {
-                    Location = new Point(x, y);
-                    ClientSize = new Size(w, h);
-                }
-            }
-            catch
-            {
-                // first use
-            }
-        }
-
-        void SavePlacement()
-        {
-            try
-            {
-                var s = Rhino.PersistentSettings.RhinoAppSettings;
-                s.SetInteger("Skunk.Palette.X", Location.X);
-                s.SetInteger("Skunk.Palette.Y", Location.Y);
-                s.SetInteger("Skunk.Palette.W", ClientSize.Width);
-                s.SetInteger("Skunk.Palette.H", ClientSize.Height);
-            }
-            catch
-            {
-                // not critical
-            }
         }
     }
 }

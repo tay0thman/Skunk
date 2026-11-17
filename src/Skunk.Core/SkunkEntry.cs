@@ -14,6 +14,10 @@ namespace Skunk
         // Architecture > Datum
         public static Result SkLevel(object doc, object mode, object command) => Kit.Run(doc, mode, "SkLevel", DatumCommands.Level);
         public static Result SkLevels(object doc, object mode, object command) => Kit.Run(doc, mode, "SkLevels", DatumCommands.Levels);
+        public static Result SkDatumBox(object doc, object mode, object command) => Kit.Run(doc, mode, "SkDatumBox", DatumCommands.DatumBox);
+        public static Result SkGrid(object doc, object mode, object command) => Kit.Run(doc, mode, "SkGrid", DatumCommands.Grid);
+        public static Result SkRenumberGrids(object doc, object mode, object command) => Kit.Run(doc, mode, "SkRenumberGrids", DatumCommands.RenumberGrids);
+        public static Result SkGridBubbles(object doc, object mode, object command) => Kit.Run(doc, mode, "SkGridBubbles", DatumCommands.GridBubbles);
         public static Result SkGoToLevel(object doc, object mode, object command) => Kit.Run(doc, mode, "SkGoToLevel", DatumCommands.GoToLevel);
         public static Result SkAttachToLevel(object doc, object mode, object command) => Kit.Run(doc, mode, "SkAttachToLevel", DatumCommands.Attach);
         public static Result SkDetachFromLevel(object doc, object mode, object command) => Kit.Run(doc, mode, "SkDetachFromLevel", DatumCommands.Detach);
@@ -38,6 +42,7 @@ namespace Skunk
         public static Result SkUpdate(object doc, object mode, object command) => Kit.Run(doc, mode, "SkUpdate", ManageCommands.Update);
         public static Result SkSettings(object doc, object mode, object command) => Kit.Run(doc, mode, "SkSettings", ManageCommands.Settings);
         public static Result Skunk(object doc, object mode, object command) => Kit.Run(doc, mode, "Skunk", ManageCommands.Start);
+        public static Result SkAbout(object doc, object mode, object command) => Kit.Run(doc, mode, "SkAbout", ManageCommands.About);
 
         // View
         public static Result SkOrientView(object doc, object mode, object command) => Kit.Run(doc, mode, "SkOrientView", ManageCommands.OrientView);

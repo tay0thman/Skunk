@@ -11,13 +11,18 @@ using Skunk.Units;
 namespace Skunk.UI
 {
     /// <summary>
-    /// Location and coordinates (project location + project base point / survey point
-    /// properties): shared coordinates of the project base point, angle to true north, survey point
-    /// values and clipping, and which named CPlanes hold the two systems.
+    /// Location and coordinates: the project location - the Rhino model's geographic location, read from the model
+    /// (set in Rhino) - and Rhino's north against true north; shared coordinates of the project base point, angle to
+    /// true north, survey point values and clipping, and which named CPlanes hold the two systems.
     /// </summary>
     public sealed class LocationDialog : Dialog<bool>
     {
         readonly RhinoDoc _doc;
+        readonly Label _place = new Label(), _address = new Label(), _latitude = new Label(), _longitude = new Label();
+        readonly Label _elevation = new Label(), _anchor = new Label(), _rhinoNorth = new Label { Wrap = WrapMode.Word };
+        readonly Button _setInRhino = new Button { Text = "Set in Rhino..." };
+        readonly Button _useRhinoNorth = new Button { Text = "True North from Rhino" };
+        readonly Button _setRhinoNorth = new Button { Text = "Rhino's North from True North" };
         readonly TextBox _pbpN = new TextBox(), _pbpE = new TextBox(), _pbpZ = new TextBox();
         readonly TextBox _angle = new TextBox();
         readonly DropDown _angleSide = new DropDown { Items = { "East", "West" } };
@@ -39,7 +44,7 @@ namespace Skunk.UI
             _doc = doc;
             Title = "Skunk - Location and Coordinates";
             Resizable = true;
-            ClientSize = new Size(560, 520);
+            ClientSize = new Size(580, 560);
             Padding = new Padding(10);
             EtoKit.Style(this);
 
@@ -49,6 +54,59 @@ namespace Skunk.UI
                 _pbpPlane.Items.Add(n);
                 _spPlane.Items.Add(n);
             }
+
+            var geoPage = new TabPage
+            {
+                Text = "Location",
+                Padding = new Padding(10),
+                Content = new StackLayout
+                {
+                    Spacing = 6,
+                    HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                    Items =
+                    {
+                        EtoKit.Note("The project location is the Rhino model's geographic location: its Earth anchor point, which Rhino's Sun uses too. Skunk reads it from the model; set it in Rhino."),
+                        EtoKit.Row("Place", _place), EtoKit.Row("Address", _address),
+                        EtoKit.Row("Latitude", _latitude), EtoKit.Row("Longitude", _longitude), EtoKit.Row("Elevation", _elevation),
+                        EtoKit.Row("Anchor point (internal)", _anchor),
+                        EtoKit.Row("Rhino's north", _rhinoNorth),
+                        EtoKit.Buttons(_setInRhino),
+                        EtoKit.Buttons(_useRhinoNorth, _setRhinoNorth),
+                        EtoKit.Note("Set in Rhino keeps your changes and opens Rhino's document location (Document Properties > Location, with its world map); this dialog comes back when you close it. Rhino's Sun panel sets the same location."),
+                        EtoKit.Note("Rhino's north follows true north while the two agree. When they differ, match them either way: true north turns about the point chosen under Project Base Point > Rotate about."),
+                    },
+                },
+            };
+            _setInRhino.ToolTip = "Opens Rhino's Document Properties > Location (the world map), then this dialog again";
+            _setInRhino.Click += (s, e) =>
+            {
+                if (!Apply())
+                    return;
+                Close(true);
+                RunAfter(_doc, RhinoLocationPage, "_SkLocation");
+            };
+            _useRhinoNorth.ToolTip = "Turn true north onto Rhino's north (shared coordinates turn with it)";
+            _useRhinoNorth.Click += (s, e) =>
+            {
+                if (!Apply())
+                    return;
+                var pivot = _pivot.SelectedIndex == 1 ? RotationPivot.SurveyPoint : RotationPivot.ProjectBasePoint;
+                Kit.Edit(_doc, "Skunk Location", ctx =>
+                {
+                    var site = SiteModel.Get(_doc);
+                    GeoLocation.UseRhinoNorth(_doc, site, pivot);
+                    site.Save(_doc);
+                }, contextChanged: true);
+                LoadValues();
+            };
+            _setRhinoNorth.ToolTip = "Point Rhino's north (its Sun and Earth anchor point) along true north";
+            _setRhinoNorth.Click += (s, e) =>
+            {
+                if (!Apply())
+                    return;
+                Kit.Edit(_doc, "Skunk: Rhino's North", ctx => GeoLocation.SetRhinoNorth(_doc, SiteModel.Get(_doc).TrueNorth));
+                LoadValues();
+            };
 
             var pbpPage = new TabPage
             {
@@ -111,7 +169,7 @@ namespace Skunk.UI
                 Spacing = new Size(6, 8),
                 Rows =
                 {
-                    new TableRow(new TabControl { Pages = { pbpPage, spPage, reportPage } }) { ScaleHeight = true },
+                    new TableRow(new TabControl { Pages = { geoPage, pbpPage, spPage, reportPage } }) { ScaleHeight = true },
                     new TableRow(EtoKit.Note("Lengths accept feet-inches (10'-6 1/2\"), inches, mm / m, or plain numbers in model units.")),
                     new TableRow(EtoKit.Buttons(ok, cancel, apply)),
                 },
@@ -139,11 +197,25 @@ namespace Skunk.UI
             _pbpPlane.Text = site.Data.PbpCPlane;
             _spPlane.Text = site.Data.SpCPlane;
 
+            var geo = GeoLocation.Read(_doc);
+            _place.Text = geo.IsSet ? (geo.Name.Length > 0 ? geo.Name : "(no name)") : "Not set in this Rhino model";
+            _address.Text = geo.Description;
+            _latitude.Text = geo.IsSet ? GeoLocation.FormatLatitude(geo.Latitude) : "";
+            _longitude.Text = geo.IsSet ? GeoLocation.FormatLongitude(geo.Longitude) : "";
+            _elevation.Text = geo.IsSet ? geo.Elevation(_doc) : "";
+            _anchor.Text = geo.IsSet ? L(geo.ModelPoint.X) + ",  " + L(geo.ModelPoint.Y) + ",  " + L(geo.ModelPoint.Z) : "";
+            _rhinoNorth.Text = geo.NorthText(site);
+            _useRhinoNorth.Enabled = _setRhinoNorth.Enabled = !GeoLocation.SameNorth(geo.North, site.TrueNorth);
+
             var o = site.Project.Origin;
             var s = site.Survey.Origin;
             var shared0 = site.SharedOrigin;
+            string pbpAt = GeoLocation.LatLongText(_doc, o), spAt = GeoLocation.LatLongText(_doc, s);
             _report.Text = string.Join(System.Environment.NewLine, new[]
             {
+                "Project location: " + geo.Summary(_doc, site),
+                pbpAt.Length > 0 ? "   project base point at " + pbpAt + ";  survey point at " + spAt : "   (set it in Rhino: Document Properties > Location, or the Location tab's Set in Rhino)",
+                "",
                 "Angle from project north to true north: " + UnitFormat.AngleEastWest(a) + "   (" + UnitFormat.Decimal(((-a % 360) + 360) % 360, 2, false, false, false) + "° counter-clockwise)",
                 "",
                 "Project base point",
@@ -157,6 +229,27 @@ namespace Skunk.UI
                 "Internal origin in shared coordinates",
                 "   N " + L(site.Shared(Rhino.Geometry.Point3d.Origin).Y) + "   E " + L(site.Shared(Rhino.Geometry.Point3d.Origin).X) + "   Elev " + L(site.Shared(Rhino.Geometry.Point3d.Origin).Z),
             });
+        }
+
+        /// <summary>
+        /// Rhino's document location: Document Properties > Location, with its world map - the page Rhino's own "Manage
+        /// Document Location" opens (the Query Model Location component in Grasshopper). It sets the Earth anchor point.
+        /// </summary>
+        public const string RhinoLocationPage = "_-DocumentPropertiesPage _Location";
+
+        /// <summary>Run Rhino commands, one after the other, once this dialog and the command that opened it have ended.</summary>
+        static void RunAfter(RhinoDoc doc, params string[] scripts)
+        {
+            EventHandler run = null;
+            run = (s, e) =>
+            {
+                if (Rhino.Commands.Command.InCommand())
+                    return;
+                RhinoApp.Idle -= run;
+                foreach (var script in scripts)
+                    RhinoApp.RunScript(doc.RuntimeSerialNumber, script, false);
+            };
+            RhinoApp.Idle += run;
         }
 
         bool Apply()

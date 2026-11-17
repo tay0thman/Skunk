@@ -23,6 +23,42 @@ namespace Skunk.Plugin
         protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.SkLevels(doc, mode, this);
     }
 
+    /// <summary>Grid: draw grid lines named 1, 2, 3 or A, B, C with a bubble at the end; type a new name into a bubble and the grids after it follow; drag a bubble along its grid to lengthen it; in a datum box the ends sit on the box</summary>
+    [System.Runtime.InteropServices.Guid("646efcf9-4fcb-5047-8a4e-7049b983065b")]
+    public sealed class SkGridCommand : Command
+    {
+        public override string EnglishName => "SkGrid";
+
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.SkGrid(doc, mode, this);
+    }
+
+    /// <summary>Renumber Grids: name grids one after another (1, 2, 3 or A, B, C) - pick them in order, or select several and draw a direction across them</summary>
+    [System.Runtime.InteropServices.Guid("15ef73f0-fa52-5482-995a-02e83e16029d")]
+    public sealed class SkRenumberGridsCommand : Command
+    {
+        public override string EnglishName => "SkRenumberGrids";
+
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.SkRenumberGrids(doc, mode, this);
+    }
+
+    /// <summary>Grid Bubbles: tick Top, Bottom, Left or Right around a diagram of the grids - bubbles on those sides of the active view; in a layout detail only that detail changes</summary>
+    [System.Runtime.InteropServices.Guid("b199e672-211d-5aab-9e9c-2c72d007e33c")]
+    public sealed class SkGridBubblesCommand : Command
+    {
+        public override string EnglishName => "SkGridBubbles";
+
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.SkGridBubbles(doc, mode, this);
+    }
+
+    /// <summary>Datum Box: one box holds the extents of the levels and the ends of the grids in it - move, scale or rotate the box and they follow; drag a level's head sideways, or a grid's bubble along it, to take that one out</summary>
+    [System.Runtime.InteropServices.Guid("f51f79df-84a4-5792-a959-c324b2acd102")]
+    public sealed class SkDatumBoxCommand : Command
+    {
+        public override string EnglishName => "SkDatumBox";
+
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.SkDatumBox(doc, mode, this);
+    }
+
     /// <summary>Go To Level: set the CPlane to a level, with a plan view and a view range (plan cut)</summary>
     [System.Runtime.InteropServices.Guid("b929002d-b7bb-5e54-846e-45f68a930562")]
     public sealed class SkGoToLevelCommand : Command
@@ -95,7 +131,7 @@ namespace Skunk.Plugin
         protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.SkEditType(doc, mode, this);
     }
 
-    /// <summary>Properties: the Properties palette for Skunk elements (toggle)</summary>
+    /// <summary>Skunk Attributes: the dockable panel with the type and parameters of the selected Skunk elements - opens it, or closes it when its tab is in front</summary>
     [System.Runtime.InteropServices.Guid("cbf40c1c-479d-503b-bc4d-f77ee19f5bf2")]
     public sealed class SkPropertiesCommand : Command
     {
@@ -104,7 +140,7 @@ namespace Skunk.Plugin
         protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.SkProperties(doc, mode, this);
     }
 
-    /// <summary>Location: project base point, survey point, angle to true north and their named CPlanes</summary>
+    /// <summary>Location: the project location (the Rhino model's geographic location and Rhino's north), project base point, survey point, angle to true north and their named CPlanes</summary>
     [System.Runtime.InteropServices.Guid("7ad45ee8-0715-5bb2-8c47-037778ebc096")]
     public sealed class SkLocationCommand : Command
     {
@@ -194,13 +230,22 @@ namespace Skunk.Plugin
         protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.SkSettings(doc, mode, this);
     }
 
-    /// <summary>Skunk: load Skunk, start live updates and show the Skunk toolbar (add Skunk to Rhino's startup commands)</summary>
+    /// <summary>Skunk: load Skunk, start live updates and load the Skunk toolbar (add Skunk to Rhino's startup commands)</summary>
     [System.Runtime.InteropServices.Guid("7946266c-ea13-5f34-88d7-19448a2f22e7")]
     public sealed class SkunkCommand : Command
     {
         public override string EnglishName => "Skunk";
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.Skunk(doc, mode, this);
+    }
+
+    /// <summary>About Skunk: version, what it does, where it is installed</summary>
+    [System.Runtime.InteropServices.Guid("2236c919-af8e-58c8-a28d-2a46c75ef90a")]
+    public sealed class SkAboutCommand : Command
+    {
+        public override string EnglishName => "SkAbout";
+
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode) => SkunkEntry.SkAbout(doc, mode, this);
     }
 
     /// <summary>Orientation: turn the plan view so true north points up</summary>
@@ -227,6 +272,10 @@ namespace Skunk.Plugin
         {
             "SkLevel",
             "SkLevels",
+            "SkGrid",
+            "SkRenumberGrids",
+            "SkGridBubbles",
+            "SkDatumBox",
             "SkGoToLevel",
             "SkAttachToLevel",
             "SkDetachFromLevel",
@@ -247,6 +296,7 @@ namespace Skunk.Plugin
             "SkUpdate",
             "SkSettings",
             "Skunk",
+            "SkAbout",
             "SkOrientView",
             "SkShowSite",
         };

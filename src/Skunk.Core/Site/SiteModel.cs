@@ -49,10 +49,13 @@ namespace Skunk.Site
         public Plane Survey;
         public bool ProjectFromCPlane;
         public bool SurveyFromCPlane;
+        /// <summary>True north as it was read (before any edit to this model of the site).</summary>
+        public Vector3d ReadNorth = Vector3d.YAxis;
 
         public static SiteModel Get(RhinoDoc doc)
         {
-            var data = DocStore.Get<SiteData>(doc, Keys.SiteEntry) ?? new SiteData();
+            var stored = DocStore.Get<SiteData>(doc, Keys.SiteEntry);
+            var data = stored ?? new SiteData();
             if (string.IsNullOrWhiteSpace(data.PbpCPlane))
                 data.PbpCPlane = Keys.DefaultPbpCPlane;
             if (string.IsNullOrWhiteSpace(data.SpCPlane))
@@ -63,15 +66,32 @@ namespace Skunk.Site
                 m.Project = PlaneFrom(data.PbpPlane) ?? Plane.WorldXY;
             m.SurveyFromCPlane = NamedPlanes.TryGet(doc, data.SpCPlane, out m.Survey);
             if (!m.SurveyFromCPlane)
-                m.Survey = PlaneFrom(data.SpPlane) ?? Plane.WorldXY;
+                m.Survey = PlaneFrom(data.SpPlane) ?? (stored == null ? StartSurvey(doc) : Plane.WorldXY);
             m.Project = Horizontal(m.Project);
             m.Survey = Horizontal(m.Survey);
+            m.ReadNorth = m.Survey.YAxis;
             return m;
         }
 
-        /// <summary>Write the planes to their named CPlanes and the data to the document.</summary>
+        /// <summary>
+        /// Where a model without a Skunk site starts: the survey point at the internal origin and true north along Rhino's
+        /// north - the model's geographic location, which Rhino's Sun shares (world Y in a model that never set one).
+        /// </summary>
+        public static Plane StartSurvey(RhinoDoc doc)
+        {
+            var north = GeoLocation.RhinoNorth(doc);
+            return new Plane(Point3d.Origin, Vector3d.CrossProduct(north, Vector3d.ZAxis), north);
+        }
+
+        /// <summary>
+        /// Write the planes to their named CPlanes and the data to the document. Rhino's north (its Sun and Earth anchor
+        /// point) follows a new true north when the two agreed (<see cref="GeoLocation.FollowTrueNorth"/>).
+        /// </summary>
         public void Save(RhinoDoc doc)
         {
+            // the true north Rhino's north was last kept with: as last saved (a true north edited on its named CPlane
+            // is newer than that), else as it was read
+            var before = PlaneFrom(Data.SpPlane)?.YAxis ?? ReadNorth;
             Project = Horizontal(Project);
             Survey = Horizontal(Survey);
             Data.PbpPlane = PlaneArray(Project);
@@ -80,6 +100,8 @@ namespace Skunk.Site
             NamedPlanes.Set(doc, Data.SpCPlane, Survey);
             ProjectFromCPlane = SurveyFromCPlane = true;
             DocStore.Set(doc, Keys.SiteEntry, Data);
+            GeoLocation.FollowTrueNorth(doc, before, TrueNorth);
+            ReadNorth = TrueNorth;
         }
 
         /// <summary>A short text that changes whenever any coordinate system changes.</summary>

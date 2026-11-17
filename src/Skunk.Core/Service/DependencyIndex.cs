@@ -7,7 +7,7 @@ using Skunk.Elements;
 
 namespace Skunk.Service
 {
-    /// <summary>Who depends on whom: host -> spots, level -> relative spots / plan cuts.</summary>
+    /// <summary>Who depends on whom: host -> spots, level -> relative spots / plan cuts; and every level, datum box, arrow, cut.</summary>
     public sealed class DependencyIndex
     {
         public readonly Dictionary<Guid, HashSet<Guid>> HostToSpots = new Dictionary<Guid, HashSet<Guid>>();
@@ -17,6 +17,8 @@ namespace Skunk.Service
         public readonly HashSet<Guid> Levels = new HashSet<Guid>();
         public readonly HashSet<Guid> Arrows = new HashSet<Guid>();
         public readonly HashSet<Guid> Cuts = new HashSet<Guid>();
+        public readonly HashSet<Guid> Boxes = new HashSet<Guid>();
+        public readonly HashSet<Guid> Grids = new HashSet<Guid>();
 
         public void Clear()
         {
@@ -27,6 +29,8 @@ namespace Skunk.Service
             Levels.Clear();
             Arrows.Clear();
             Cuts.Clear();
+            Boxes.Clear();
+            Grids.Clear();
         }
 
         public void Rebuild(RhinoDoc doc)
@@ -74,6 +78,12 @@ namespace Skunk.Service
                 case ElementKind.PlanCut:
                     Cuts.Add(o.Id);
                     break;
+                case ElementKind.DatumBox:
+                    Boxes.Add(o.Id);
+                    break;
+                case ElementKind.Grid:
+                    Grids.Add(o.Id);
+                    break;
             }
         }
 
@@ -91,6 +101,8 @@ namespace Skunk.Service
             Levels.Remove(id);
             Arrows.Remove(id);
             Cuts.Remove(id);
+            Boxes.Remove(id);
+            Grids.Remove(id);
         }
 
         public IEnumerable<Guid> SpotsOn(Guid host) =>

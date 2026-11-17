@@ -158,7 +158,7 @@ namespace Skunk.UI
             var levels = LevelElement.All(_doc);
             double z = levels.Count > 0 ? levels[levels.Count - 1].Z + h : SiteModelZ();
             string type = levels.Count > 0 ? levels[levels.Count - 1].Type?.Name : null;
-            Kit.Edit(_doc, "Skunk New Level", ctx => LevelElement.Create(_doc, type, null, z, LevelElement.DefaultFootprint(_doc, z)));
+            Kit.Edit(_doc, "Skunk New Level", ctx => LevelElement.Create(_doc, type, null, z, LevelElement.DefaultFootprint(_doc, z), DatumBoxElement.DefaultBox(_doc)));
             LoadValues();
         }
 

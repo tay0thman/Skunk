@@ -14,6 +14,8 @@ namespace Skunk.UI
         Check,
         Choice,
         Color,
+        /// <summary>A button in its group's header row (Place), not a row of its own.</summary>
+        GroupButton,
     }
 
     /// <summary>One row of a Properties / Type Properties grid ("Parameter | Value").</summary>
@@ -34,6 +36,7 @@ namespace Skunk.UI
         public Action<bool> OnCheck;
         public Action<int> OnChoice;
         public Action<int> OnColor;
+        public Action OnClick;
 
         public static Param ReadOnly(string group, string name, string text, string tip = "") =>
             new Param { Group = group, Name = name, Text = text ?? "", Tooltip = tip };
@@ -49,6 +52,10 @@ namespace Skunk.UI
 
         public static Param Color(string group, string name, int argb, Action<int> apply, string tip = "") =>
             new Param { Group = group, Name = name, Editor = ParamEditor.Color, Argb = argb, OnColor = apply, Tooltip = tip };
+
+        /// <summary>A button drawn in its group's header row, beside the group's name (Place).</summary>
+        public static Param GroupButton(string group, string text, Action click, string tip = "") =>
+            new Param { Group = group, Name = text, Editor = ParamEditor.GroupButton, Text = text, OnClick = click, Tooltip = tip };
     }
 
     /// <summary>
@@ -72,13 +79,27 @@ namespace Skunk.UI
         public void ShowParameters(IEnumerable<Param> parameters)
         {
             var layout = new DynamicLayout { DefaultSpacing = new Size(6, 3), Padding = new Padding(0, 0, 0, 6) };
+            var all = parameters.ToList();
             string group = null;
-            foreach (var p in parameters)
+            foreach (var p in all)
             {
+                // a group's buttons sit in its header row, in the value column
+                if (p.Editor == ParamEditor.GroupButton)
+                    continue;
                 if (p.Group != group)
                 {
                     group = p.Group;
-                    layout.Add(Header(group));
+                    var buttons = all.Where(b => b.Editor == ParamEditor.GroupButton && b.Group == group).ToList();
+                    if (buttons.Count == 0)
+                        layout.Add(Header(group));
+                    else
+                    {
+                        layout.BeginHorizontal();
+                        layout.Add(Header(group));
+                        layout.Add(GroupButtons(buttons), true);
+                        layout.Add(new Panel { Width = 4 });
+                        layout.EndHorizontal();
+                    }
                 }
                 var label = new Label { Text = p.Name, Width = LabelWidth, VerticalAlignment = VerticalAlignment.Center, ToolTip = p.Tooltip };
                 layout.BeginHorizontal();
@@ -89,6 +110,25 @@ namespace Skunk.UI
             }
             layout.Add(null, true);
             Content = layout;
+        }
+
+        Control GroupButtons(List<Param> buttons)
+        {
+            var row = new TableLayout { Spacing = new Size(4, 0) };
+            var cells = new TableRow();
+            foreach (var b in buttons)
+            {
+                var button = new Button { Text = b.Text, ToolTip = b.Tooltip, Enabled = b.Enabled };
+                var param = b;
+                button.Click += (s, e) =>
+                {
+                    param.OnClick?.Invoke();
+                    Edited?.Invoke();
+                };
+                cells.Cells.Add(new TableCell(button, true));
+            }
+            row.Rows.Add(cells);
+            return row;
         }
 
         static Control Header(string text)
@@ -208,6 +248,28 @@ namespace Skunk.UI
             };
 
         public static Label Note(string text) => new Label { Text = text, Wrap = WrapMode.Word, TextColor = SystemColors.DisabledText };
+
+        /// <summary>
+        /// Run a command from a button in a panel the way a toolbar button does: a command that is running ends first
+        /// ("!", as typed); otherwise it starts on the next idle, so the click returns at once.
+        /// </summary>
+        public static void RunCommand(string englishName)
+        {
+            if (Rhino.Commands.Command.InCommand())
+            {
+                Rhino.RhinoApp.SendKeystrokes("!_" + englishName, true);
+                return;
+            }
+            EventHandler run = null;
+            run = (s, e) =>
+            {
+                Rhino.RhinoApp.Idle -= run;
+                var doc = Rhino.RhinoDoc.ActiveDoc;
+                if (doc != null)
+                    Rhino.RhinoApp.RunScript(doc.RuntimeSerialNumber, "_" + englishName, false);
+            };
+            Rhino.RhinoApp.Idle += run;
+        }
 
         public static Control Buttons(params Button[] buttons)
         {

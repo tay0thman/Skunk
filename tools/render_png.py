@@ -66,5 +66,20 @@ def ico(png_bytes):
     return header + entry + png_bytes
 
 
+def ico_multi(pngs):
+    """An .ico holding several PNG images, one per size (what a Rhino panel icon wants: 16 to 64 px)."""
+    import struct
+    from PIL import Image
+    header = struct.pack("<HHH", 0, 1, len(pngs))
+    offset = 6 + 16 * len(pngs)
+    entries, data = b"", b""
+    for png in pngs:
+        w, h = Image.open(io.BytesIO(png)).size
+        entries += struct.pack("<BBBBHHII", w % 256, h % 256, 0, 0, 1, 32, len(png), offset)
+        offset += len(png)
+        data += png
+    return header + entries + data
+
+
 def b64(data):
     return base64.b64encode(data).decode("ascii")

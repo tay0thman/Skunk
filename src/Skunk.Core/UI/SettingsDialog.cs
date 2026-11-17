@@ -22,8 +22,9 @@ namespace Skunk.UI
         static readonly double[] MetricScales = { 1, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000 };
 
         readonly RhinoDoc _doc;
-        readonly CheckBox _rhinoScaling = new CheckBox { Text = "Use Rhino's model space annotation scaling (recommended: text prints at the type size in every detail)" };
+        readonly CheckBox _rhinoScaling = new CheckBox { Text = "Use Rhino's annotation scaling in model views and layouts (recommended: text and symbols print at the type size in every detail)" };
         readonly ComboBox _scale = new ComboBox();
+        readonly CheckBox _linetypes = new CheckBox { Text = "Show linetypes in model views at this scale (Rhino's linetype display scale; prints are always at paper size)" };
         readonly CheckBox _cplanes = new CheckBox { Text = "Create a named CPlane for every level" };
         readonly TextBox _cut = new TextBox(), _depth = new TextBox();
         readonly CheckBox _deleteSpots = new CheckBox { Text = "Delete spots when their host is deleted" };
@@ -32,8 +33,9 @@ namespace Skunk.UI
         readonly NumericStepper _markerSize = new NumericStepper { MinValue = 10, MaxValue = 60, DecimalPlaces = 0 };
         readonly CheckBox _verbose = new CheckBox { Text = "Verbose command-line messages (troubleshooting)" };
         readonly Label _aliasNote = EtoKit.Note("");
-        readonly CheckBox _dimsLayer = new CheckBox { Text = "Put new Rhino dimensions and leaders on a Skunk sublayer" };
+        readonly CheckBox _dimsLayer = new CheckBox { Text = "Put new Rhino dimensions and leaders on an " + Skunk.Core.Keys.RootLayer + " sublayer" };
         readonly TextBox _dimsName = new TextBox();
+        readonly CheckBox _startWithRhino = new CheckBox { Text = "Start Skunk with Rhino" };
 
         public static void Show(RhinoDoc doc)
         {
@@ -58,8 +60,6 @@ namespace Skunk.UI
                 AliasesDialog.Show();
                 ShowAliases();
             };
-            var copy = new Button { Text = "Copy \"Skunk\"" };
-            copy.Click += (s, e) => new Clipboard { Text = "Skunk" };
             var moveDims = new Button { Text = "Move existing Rhino dimensions there now" };
             moveDims.Click += (s, e) => MoveExistingDimensions();
 
@@ -84,21 +84,23 @@ namespace Skunk.UI
                     HorizontalContentAlignment = HorizontalAlignment.Stretch,
                     Items =
                     {
-                        Group("Annotation scale (view scale)", _rhinoScaling, EtoKit.Row("Scale", _scale, 80),
-                            EtoKit.Note("Skunk types are sized in paper units. With Rhino's scaling on, Rhino scales text and symbols per detail; " +
-                                        "leader offsets and slope arrows Skunk draws use this scale.")),
+                        Group("Annotation scale (view scale)", _rhinoScaling, EtoKit.Row("Scale", _scale, 80), _linetypes,
+                            EtoKit.Note("Skunk types are sized in paper units. With Rhino's scaling on, text, symbols and whole level heads print at " +
+                                        "their type size in every detail at any scale, and show at this scale in model views (it is the model space " +
+                                        "scale of Skunk's annotation styles); the Skunk Datum line prints at its paper pattern. " +
+                                        "Spot leaders and slope arrows are model geometry; the north arrow is sized with this scale.")),
                         Group("Levels and plan views", _cplanes, EtoKit.Row("Plan cut height", _cut, 120), EtoKit.Row("View depth below level", _depth, 120)),
                         Group("Behaviour", _deleteSpots, _verbose),
-                        Group("Rhino dimensions", _dimsLayer, EtoKit.Row("Sublayer of Skunk", _dimsName, 140),
-                            EtoKit.Note("Dimensions and leaders drawn with Rhino's own commands go to Skunk::<sublayer> as they are made, in the same undo step. " +
+                        Group("Rhino dimensions", _dimsLayer, EtoKit.Row("Sublayer of " + Skunk.Core.Keys.RootLayer, _dimsName, 170),
+                            EtoKit.Note("Dimensions and leaders drawn with Rhino's own commands go to __Annotations__::<sublayer> as they are made, in the same undo step. " +
                                         "Skunk's spot and level annotations keep their layers; text stays where it is."),
                             EtoKit.Buttons(moveDims)),
                         Group("Site points", _markers, _origin, EtoKit.Row("Marker size (pixels)", _markerSize, 140)),
                         Group("Keyboard aliases", _aliasNote, EtoKit.Buttons(aliases, editAliases)),
-                        Group("Start with Rhino",
-                            EtoKit.Note("Skunk keeps elements in sync from the first Skunk command of a session. To start it with Rhino, add the command " +
-                                        "Skunk to Tools > Options > General > Command Lists (Run these commands every time Rhino starts)."),
-                            EtoKit.Buttons(copy)),
+                        Group("Start with Rhino", _startWithRhino,
+                            EtoKit.Note("Loads Skunk when Rhino starts, so elements stay in sync from the first moment and a new version's " +
+                                        "toolbar buttons appear at once. This puts the Skunk command in Rhino's Options > General > Command Lists; " +
+                                        "your other startup commands stay as they are.")),
                         Group("About", new Label { Text = SkunkInfo.Title + " - project coordinates, levels and spot annotations for Rhino 9" },
                             EtoKit.Note("Engine: " + engine)),
                         EtoKit.Buttons(ok, cancel),
@@ -121,7 +123,7 @@ namespace Skunk.UI
         void LoadValues()
         {
             var s = DocStore.Settings(_doc);
-            _rhinoScaling.Checked = _doc.ModelSpaceAnnotationScalingEnabled;
+            _rhinoScaling.Checked = DocUnits.RhinoScalesAnnotation(_doc);
             _scale.Items.Clear();
             if (Imperial)
                 foreach (var sc in ImperialScales)
@@ -130,6 +132,7 @@ namespace Skunk.UI
                 foreach (var sc in MetricScales)
                     _scale.Items.Add("1:" + sc);
             _scale.Text = ScaleText(DocUnits.AnnotationScale(_doc));
+            _linetypes.Checked = s.LinetypeScaleFollows;
             _cplanes.Checked = s.LevelCPlanes;
             _cut.Text = PropertyModel.Len(_doc, DocUnits.FromMeters(_doc, s.CutHeightMeters));
             _depth.Text = PropertyModel.Len(_doc, DocUnits.FromMeters(_doc, s.ViewDepthMeters));
@@ -140,6 +143,15 @@ namespace Skunk.UI
             _verbose.Checked = Log.Verbose;
             _dimsLayer.Checked = s.DimensionsOnSkunkLayer;
             _dimsName.Text = DimensionLayer.LayerName(s.DimensionsLayer);
+            try
+            {
+                _startWithRhino.Checked = StartWithRhino.IsOn(new RhinoStartupStore());
+            }
+            catch (Exception ex)
+            {
+                _startWithRhino.Enabled = false;
+                Log.Debug("startup commands: " + ex.Message);
+            }
             ShowAliases();
         }
 
@@ -200,17 +212,37 @@ namespace Skunk.UI
             s.ShowInternalOrigin = _origin.Checked == true;
             s.MarkerPixelSize = (int)_markerSize.Value;
             s.AnnotationScale = scale;
+            if (_linetypes.Checked == true && !s.LinetypeScaleFollows)
+                LinetypeDisplay.TakeOver(_doc, s);
+            else if (_linetypes.Checked != true)
+                s.LinetypeScaleFollows = false;
             s.DimensionsOnSkunkLayer = _dimsLayer.Checked == true;
             s.DimensionsLayer = DimensionLayer.LayerName(_dimsName.Text);
             Log.Verbose = _verbose.Checked == true;
+            if (_startWithRhino.Enabled)
+            {
+                try
+                {
+                    if (StartWithRhino.Set(new RhinoStartupStore(), _startWithRhino.Checked == true))
+                        Log.Info(_startWithRhino.Checked == true
+                            ? "Skunk will start with Rhino (added to Options > General > Command Lists)."
+                            : "Skunk no longer starts with Rhino (removed from Options > General > Command Lists).");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("could not change Rhino's startup commands", ex);
+                }
+            }
             Kit.Edit(_doc, "Skunk Settings", ctx =>
             {
                 DocStore.SaveSettings(_doc, s);
+                // Rhino scales both or neither: Skunk's style sizes are paper sizes only when layouts scale them too
                 bool rhino = _rhinoScaling.Checked == true;
-                if (_doc.ModelSpaceAnnotationScalingEnabled != rhino)
+                if (DocUnits.RhinoScalesAnnotation(_doc) != rhino)
+                {
                     _doc.ModelSpaceAnnotationScalingEnabled = rhino;
-                if (rhino && Math.Abs(_doc.ModelSpaceTextScale - scale) > 1e-9)
-                    _doc.ModelSpaceTextScale = scale;
+                    _doc.LayoutSpaceAnnotationScalingEnabled = rhino;
+                }
                 Types.Styles.EnsureDatumLinetype(_doc);
             }, contextChanged: true);
             return true;

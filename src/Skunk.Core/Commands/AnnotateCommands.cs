@@ -256,15 +256,21 @@ namespace Skunk.Commands
             if (selected != null)
             {
                 kind = ElementIO.KindOf(selected);
-                if (kind == ElementKind.LevelHead)
+                if (ElementKinds.IsLevelPart(kind))
                 {
                     var hd = ElementIO.Read<HeadData>(selected);
                     selected = hd == null ? null : ElementIO.Find(doc, hd.Level);
                     kind = ElementKind.Level;
                 }
+                else if (ElementKinds.IsGridPart(kind))
+                {
+                    var gh = ElementIO.Read<GridHeadData>(selected);
+                    selected = gh == null ? null : ElementIO.Find(doc, gh.Grid);
+                    kind = ElementKind.Grid;
+                }
                 typeName = selected == null ? null : ReadTypeName(selected, kind);
             }
-            if (kind == ElementKind.ProjectBasePoint || kind == ElementKind.SurveyPoint || kind == ElementKind.PlanCut)
+            if (kind == ElementKind.ProjectBasePoint || kind == ElementKind.SurveyPoint || kind == ElementKind.PlanCut || kind == ElementKind.DatumBox)
                 kind = ElementKind.SpotElevation;
             UI.TypePropertiesDialog.Show(doc, kind, typeName ?? Kit.LastType(kind));
             return Result.Success;
@@ -276,14 +282,15 @@ namespace Skunk.Commands
             {
                 case ElementKind.Level: return ElementIO.Read<LevelData>(o)?.Type;
                 case ElementKind.NorthArrow: return ElementIO.Read<NorthArrowData>(o)?.Type;
+                case ElementKind.Grid: return ElementIO.Read<GridData>(o)?.Type;
                 default: return ElementIO.Read<SpotData>(o)?.Type;
             }
         }
 
-        /// <summary>SkProperties: the Properties palette (toggle).</summary>
+        /// <summary>SkProperties: the Skunk Attributes panel (opens it, or closes it when its tab is in front).</summary>
         public static Result Properties(RhinoDoc doc, RunMode mode)
         {
-            UI.PropertiesPalette.Toggle(doc);
+            UI.SkunkAttributesPanel.Toggle(doc);
             return Result.Success;
         }
     }

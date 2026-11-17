@@ -21,6 +21,7 @@ namespace Skunk.Types
             switch (kind)
             {
                 case ElementKind.Level:
+                case ElementKind.LevelLine:
                     return Layers.Ensure(doc, Keys.LevelsLayer, Color.FromArgb(60, 60, 60), 0.13, EnsureDatumLinetype(doc));
                 case ElementKind.LevelHead:
                     return Layers.Ensure(doc, Keys.LevelHeadsLayer, Color.FromArgb(60, 60, 60), 0.18);
@@ -34,6 +35,15 @@ namespace Skunk.Types
                     return Layers.Ensure(doc, Keys.NorthArrowsLayer, Color.Black, 0.25);
                 case ElementKind.PlanCut:
                     return Layers.Ensure(doc, Keys.PlanCutsLayer, Color.FromArgb(200, 120, 0), -1);
+                case ElementKind.DatumBox:
+                    // a drawing aid: never printed
+                    return Layers.Ensure(doc, Keys.DatumBoxesLayer, Color.FromArgb(60, 140, 180), -1);
+                case ElementKind.Grid:
+                    return Layers.Ensure(doc, Keys.GridsLayer, Color.FromArgb(60, 60, 60), 0.13, EnsureDatumLinetype(doc));
+                case ElementKind.GridHead:
+                    return Layers.Ensure(doc, Keys.GridHeadsLayer, Color.FromArgb(60, 60, 60), 0.18);
+                case ElementKind.GridElevation:
+                    return Layers.Ensure(doc, Keys.GridElevationsLayer, Color.FromArgb(60, 60, 60), 0.13, EnsureDatumLinetype(doc));
                 case ElementKind.ProjectBasePoint:
                 case ElementKind.SurveyPoint:
                 default:
@@ -42,32 +52,105 @@ namespace Skunk.Types
             }
         }
 
-        /// <summary>Center-style datum linetype (long dash, gap, short dash, gap) sized for the annotation scale.</summary>
+        /// <summary>
+        /// Skunk Datum, the center-style datum linetype: 3/4" dash, 1/8" gap, 1/8" dash, 1/8" gap on paper.
+        /// Rhino keeps linetype patterns in paper millimetres whatever the model units and prints them at that
+        /// size in every detail, so the pattern carries no units or scale (models saved with the old pattern,
+        /// model units times the annotation scale, get this one back). Model views show patterns at Rhino's
+        /// linetype display scale, which <see cref="LinetypeDisplay"/> keeps at the annotation scale.
+        /// </summary>
         public static string EnsureDatumLinetype(RhinoDoc doc)
         {
-            double scale = DocUnits.AnnotationScale(doc);
-            double u = DocUnits.FromMeters(doc, 0.001) * scale;
-            var segments = new[] { 19.05 * u, -3.175 * u, 3.175 * u, -3.175 * u };
-            var existing = doc.Linetypes.FindName(Keys.LinetypeDatum);
+            var existing = Layers.FindLinetype(doc, Keys.LinetypeDatum);
             if (existing != null)
             {
-                if (Math.Abs(existing.PatternLength - (19.05 + 3 * 3.175) * u) > 1e-9 * Math.Max(1, u))
-                {
-                    var lt = new Linetype { Name = Keys.LinetypeDatum };
-                    foreach (var s in segments)
-                        lt.AppendSegment(Math.Abs(s), s > 0);
-                    doc.Linetypes.Modify(lt, existing.Index, true);
-                }
+                if (!IsDatumPattern(existing))
+                    doc.Linetypes.Modify(DatumLinetype(), existing.Index, true);
                 return Keys.LinetypeDatum;
             }
-            var linetype = new Linetype { Name = Keys.LinetypeDatum };
-            foreach (var s in segments)
-                linetype.AppendSegment(Math.Abs(s), s > 0);
-            doc.Linetypes.Add(linetype);
+            int index = doc.Linetypes.Add(DatumLinetype());
+            // a Levels layer made while Skunk Datum was missing got Continuous: give it the datum pattern
+            int levels = Layers.LevelsLayerIndex(doc);
+            if (index >= 0 && levels >= 0 && doc.Layers[levels].LinetypeIndex < 0)
+            {
+                var layer = doc.Layers[levels];
+                layer.LinetypeIndex = index;
+                doc.Layers.Modify(layer, levels, true);
+            }
             return Keys.LinetypeDatum;
         }
 
+        /// <summary>
+        /// Once per model, for models made with Skunk 1.4.1 and earlier: a Skunk Datum with the old pattern
+        /// (model units times the annotation scale, so it printed at a size that depended on the units) gets
+        /// the paper pattern, and a Levels layer left Continuous because Skunk Datum was never added (Rhino's
+        /// FindName answers Continuous for a missing name) gets Skunk Datum. Once only, so a linetype chosen
+        /// later stays. True when the model changed.
+        /// </summary>
+        public static bool RepairDatum(RhinoDoc doc)
+        {
+            var settings = DocStore.Settings(doc);
+            if (settings.DatumVersion >= 2)
+                return false;
+            bool changed = false;
+            var existing = Layers.FindLinetype(doc, Keys.LinetypeDatum);
+            int levels = Layers.LevelsLayerIndex(doc);
+            if ((existing != null && !IsDatumPattern(existing)) || (existing == null && levels >= 0))
+            {
+                EnsureDatumLinetype(doc);
+                changed = true;
+            }
+            settings.DatumVersion = 2;
+            DocStore.SaveSettings(doc, settings);
+            return changed;
+        }
+
+        /// <summary>Skunk Datum's segments in paper millimetres (dash, gap, dash, gap).</summary>
+        public static readonly double[] DatumPatternMM = { 19.05, 3.175, 3.175, 3.175 };
+
+        static Linetype DatumLinetype()
+        {
+            var lt = new Linetype { Name = Keys.LinetypeDatum };
+            for (int i = 0; i < DatumPatternMM.Length; i++)
+                lt.AppendSegment(DatumPatternMM[i], i % 2 == 0);
+            return lt;
+        }
+
+        /// <summary>True when the linetype has Skunk Datum's paper pattern (and prints it as paper distances).</summary>
+        public static bool IsDatumPattern(Linetype lt)
+        {
+            if (lt == null || lt.AlwaysModelDistances || lt.SegmentCount != DatumPatternMM.Length)
+                return false;
+            for (int i = 0; i < DatumPatternMM.Length; i++)
+            {
+                lt.GetSegment(i, out double length, out bool solid);
+                if (Math.Abs(length - DatumPatternMM[i]) > 1e-6 || solid != (i % 2 == 0))
+                    return false;
+            }
+            return true;
+        }
+
         // ---- symbol blocks ----------------------------------------------------------------------
+
+        /// <summary>
+        /// The 1.6.0 grid bubble: a white-filled circle block used as a leader arrowhead. Bubbles are now one text each
+        /// (see the GridType style), so the block goes once nothing places it.
+        /// </summary>
+        public const string GridBubbleBlock = Keys.BlockPrefix + "Grid Bubble";
+
+        static void RetireGridBubbleBlock(RhinoDoc doc)
+        {
+            var old = doc.InstanceDefinitions.Find(GridBubbleBlock);
+            if (old == null || old.IsDeleted || old.GetReferences(1).Length > 0)
+                return;
+            doc.InstanceDefinitions.Delete(old.Index, true, true);
+        }
+
+        /// <summary>
+        /// A grid bubble's mask offset on paper: the text's mask is drawn as a circle whose radius is half the text height
+        /// plus this offset, so the circle is the bubble size across (never tighter than the text plus 1 mm).
+        /// </summary>
+        public static double GridBubbleOffsetMM(GridType t) => Math.Max(t.BubbleSizeMM - t.TextSizeMM, 1.0) / 2;
 
         /// <summary>Block name for a symbol drawn as a user arrowhead, or null when Rhino has a built-in one.</summary>
         static string BlockName(SymbolKind s)
@@ -197,8 +280,12 @@ namespace Skunk.Types
                 case ElementKind.SpotCoordinate: return "Spot Coordinate";
                 case ElementKind.SpotSlope: return "Spot Slope";
                 case ElementKind.Level:
-                case ElementKind.LevelHead: return "Level Head";
+                case ElementKind.LevelHead:
+                case ElementKind.LevelLine: return "Level Head";
                 case ElementKind.NorthArrow: return "North Arrow";
+                case ElementKind.Grid:
+                case ElementKind.GridHead:
+                case ElementKind.GridElevation: return "Grid Head";
                 default: return k.ToString();
             }
         }
@@ -242,13 +329,13 @@ namespace Skunk.Types
                 return true;
             if (name == Keys.LinetypeDatum)
                 EnsureDatumLinetype(doc);
-            var lt = doc.Linetypes.FindName(name);
+            var lt = Layers.FindLinetype(doc, name);
             if (lt == null && Array.IndexOf(RhinoDefaultLinetypes, name) >= 0)
             {
                 doc.Linetypes.LoadDefaultLinetypes();
-                lt = doc.Linetypes.FindName(name);
+                lt = Layers.FindLinetype(doc, name);
             }
-            if (lt == null || lt.IsDeleted)
+            if (lt == null)
                 return false;
             index = lt.Index;
             return true;
@@ -276,13 +363,21 @@ namespace Skunk.Types
             var ds = existing != null ? existing.Duplicate() : new DimensionStyle();
             ds.Name = name;
             Configure(doc, ds, t);
+            DimensionStyle result;
             if (existing == null)
             {
                 int index = doc.DimStyles.Add(ds, false);
-                return index >= 0 ? doc.DimStyles[index] : doc.DimStyles.Current;
+                result = index >= 0 ? doc.DimStyles[index] : doc.DimStyles.Current;
             }
-            doc.DimStyles.Modify(ds, existing.Index, true);
-            return doc.DimStyles[existing.Index];
+            else
+            {
+                doc.DimStyles.Modify(ds, existing.Index, true);
+                result = doc.DimStyles[existing.Index];
+            }
+            // grid styles no longer use the 1.6.0 bubble arrowhead block
+            if (t is GridType)
+                RetireGridBubbleBlock(doc);
+            return result;
         }
 
         static void Configure(RhinoDoc doc, DimensionStyle ds, SkunkType t)
@@ -311,6 +406,11 @@ namespace Skunk.Types
             ds.LeaderTextOrientation = TextOrientation.InPlane;
             ds.TextOrientation = TextOrientation.InPlane;
             ds.LengthFactor = 1.0;
+            // with Rhino's scaling the sizes above are paper sizes in page units: layout details print them at that size,
+            // and model views show them times the style's own model space scale (its DimensionScale, never the
+            // document's text scale) - the annotation scale in model units per page unit, so heads, bubbles and spot
+            // text read in model views. Without Rhino's scaling the sizes already hold the scale.
+            ds.DimensionScale = DocUnits.StyleModelSpaceScale(doc);
 
             switch (t)
             {
@@ -323,8 +423,9 @@ namespace Skunk.Types
                     ds.LeaderTextVerticalAlignment = Vertical(sc.TextLocation);
                     break;
                 case LevelType lt:
-                    Leader(doc, ds, lt.HeadSymbol, S(lt.SymbolSizeMM), 0);
-                    ds.LeaderHasLanding = false;
+                    // the head's tail is the landing, a style length like the symbol and the text, so the whole
+                    // head prints at its type size in every view and detail (see LevelElement.HeadLeader)
+                    Leader(doc, ds, lt.HeadSymbol, S(lt.SymbolSizeMM), S(HeadTailMM(lt)));
                     break;
                 case SpotSlopeType ss:
                     {
@@ -349,10 +450,34 @@ namespace Skunk.Types
                         ds.ForceDimensionLineBetweenExtensionLines = true;
                         break;
                     }
+                case GridType gt:
+                    {
+                        // a bubble is one text: the grid's name, its mask drawn as an opaque circle with an outline the
+                        // bubble size across. The mask is the text's own, drawn just under it, so it hides the grid line
+                        // and never the name (selected, edited in place or in any display mode), and it scales with the
+                        // text in every view and detail
+                        // (white, like the paper: a viewport-colour mask prints gray from a gray view and goes black in
+                        // dark display modes)
+                        ds.DrawTextMask = true;
+                        ds.MaskColorSource = DimensionStyle.MaskType.MaskColor;
+                        ds.MaskColor = Color.White;
+                        ds.MaskFrameType = DimensionStyle.MaskFrame.CircleFrame;
+                        ds.MaskOffset = S(GridBubbleOffsetMM(gt));
+                        ds.TextGap = 0;
+                        if (ds.LeaderArrowType == DimensionStyle.ArrowType.UserBlock)
+                            ds.LeaderArrowType = DimensionStyle.ArrowType.SolidTriangle;
+                        break;
+                    }
                 case NorthArrowType _:
                     break;
             }
         }
+
+        /// <summary>
+        /// A level head's tail on paper: the type's head length, but never shorter than the symbol's radius,
+        /// so the text always clears the symbol.
+        /// </summary>
+        public static double HeadTailMM(LevelType t) => Math.Max(t.HeadLengthMM, t.SymbolSizeMM * 0.5);
 
         /// <summary>Text location relative to the leader shoulder.</summary>
         static TextVerticalAlignment Vertical(SpotTextLocation location)

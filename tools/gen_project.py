@@ -5,8 +5,9 @@
 Writes, in ../ScriptEditor:
     <Command>.cs     one-line C# command scripts -> Skunk.SkunkEntry.<Command>(...) in shared/Skunk.Core.dll
     Skunk.rhproj     the Rhino 9 Script Editor project (commands, icons, ids, resources, toolbar link)
-    Skunk.rui        the toolbar: ONE "Skunk" toolbar, its sections (Architecture, Annotate, Manage, View)
-                     separated by toolbar separators
+    Skunk.rui        the toolbar: ONE "Skunk" toolbar; a toolbar separator between its sections (Architecture,
+                     Annotate, Manage, View) and between the groups of similar buttons in a section
+                     (commands.json "group")
 
 Safe to re-run: an existing Skunk.rhproj keeps what the Script Editor owns (version, identity text,
 publisher, build / publish settings) and the ids of existing commands; only the command list,
@@ -140,7 +141,10 @@ def main():
     img["dark"] = logo["dark"]
     png_icons(img)
     settings = project.setdefault("settings", default_project()["settings"])
-    settings["ruiPath"] = "Skunk.rui"
+    # no toolbar file in the package: Rhino opens a plug-in's own toolbar file late, when the plug-in loads, and up to
+    # 1.6.5 that copy collided with Skunk's every start. The toolbar (ScriptEditor/Skunk.rui, written below) is embedded
+    # in Skunk.Core, and Skunk writes it where Rhino opens it at start-up (Skunk.UI.SkunkToolbar).
+    settings.pop("ruiPath", None)
     settings["ruiAuto"] = False
     project["codes"] = codes
     project["resources"] = [{"id": new_id("resource." + DLL), "uri": "shared/" + DLL}]
@@ -164,6 +168,46 @@ def main():
     # ---- compiled, always-on plug-in (src/Skunk -> Skunk.rhp) ------------------------------------------
     write_compiled_plugin(ordered, commands, codes)
     write_command_list(commands)
+    panel_icons(commands)
+    about_logo()
+
+
+PANEL_ICON_SIZES = (16, 20, 24, 32, 40, 48, 64)
+
+
+def about_logo():
+    """The Skunk logo for the About dialog (SkAbout), light and dark, embedded in Skunk.Core (src/Skunk.Core/Resources)."""
+    import render_png
+    out = os.path.join(ROOT, "src", "Skunk.Core", "Resources")
+    os.makedirs(out, exist_ok=True)
+    for theme in ("light", "dark"):
+        png = render_png.render(icons.svg("skunk", theme, "Architecture"), 96)
+        if png is None:
+            print("About logo skipped (needs Microsoft Edge and Pillow); keeping the existing one")
+            return
+        with open(os.path.join(out, "Skunk.About.%s.png" % theme), "wb") as f:
+            f.write(png)
+    print("wrote", out, "(Skunk.About.light.png, Skunk.About.dark.png)")
+
+
+def panel_icons(commands):
+    """The Skunk Attributes panel's tab icon (SkProperties' button icon), light and dark, as multi-size .ico
+    files embedded in Skunk.Core (src/Skunk.Core/Resources); Rhino loads a panel icon from an assembly resource."""
+    import render_png
+    cmd = next(c for c in commands if c["name"] == "SkProperties")
+    out = os.path.join(ROOT, "src", "Skunk.Core", "Resources")
+    os.makedirs(out, exist_ok=True)
+    for theme in ("light", "dark"):
+        pngs = []
+        for size in PANEL_ICON_SIZES:
+            png = render_png.render(icons.svg(cmd["icon"], theme, cmd["section"]), size)
+            if png is None:
+                print("panel icons skipped (needs Microsoft Edge and Pillow); keeping existing ones")
+                return
+            pngs.append(png)
+        with open(os.path.join(out, "SkunkAttributes.%s.ico" % theme), "wb") as f:
+            f.write(render_png.ico_multi(pngs))
+    print("wrote", out, "(SkunkAttributes.light.ico, SkunkAttributes.dark.ico)")
 
 
 def write_command_list(commands):
@@ -300,8 +344,9 @@ def indent(text, n):
 
 
 def build_rui(cfg, codes, cfgs, group_id, toolbar_id, logo_icon, logo):
-    """One "Skunk" toolbar with every command, its sections (Architecture, Annotate, Manage, View)
-    separated by toolbar separators (spacer items, as in Rhino's default.rui)."""
+    """One "Skunk" toolbar with every command. A toolbar separator (a spacer item, as in Rhino's default.rui)
+    goes between its sections (Architecture, Annotate, Manage, View) and between the groups of similar buttons
+    within a section (commands.json "group"; a command without one is in its section's group)."""
     title = cfg.get("title", "Skunk")
     sections = cfg["sections"]
     out = ['<?xml version="1.0" encoding="utf-8"?>',
@@ -328,7 +373,12 @@ def build_rui(cfg, codes, cfgs, group_id, toolbar_id, logo_icon, logo):
         if not first:
             out.append('      <tool_bar_item guid="%s" button_style="spacer" />' % new_id("toolbar.spacer." + s))
         first = False
+        group = None
         for c in members:
+            g = c.get("group", s)
+            if group is not None and g != group:
+                out.append('      <tool_bar_item guid="%s" button_style="spacer" />' % new_id("toolbar.spacer." + s + "." + g))
+            group = g
             code = codes[c["name"]]
             out += ['      <tool_bar_item guid="%s">' % code["box"]["id"], loc("text", c.get("label", c["name"]), 8),
                     "        <left_macro_id>%s</left_macro_id>" % code["id"]]

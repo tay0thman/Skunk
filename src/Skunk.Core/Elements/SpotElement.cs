@@ -35,6 +35,12 @@ namespace Skunk.Elements
         /// <summary>The drawn arrow: tail, head (the arrowhead end) and the plane it lies in.</summary>
         public Point3d Tail, Head;
         public Plane Plane;
+        /// <summary>
+        /// The arrow sits <see cref="Offset"/> (model units) along <see cref="Side"/> from its line through the location:
+        /// in a side view Side points up, so a positive offset is above the host line.
+        /// </summary>
+        public Vector3d Side;
+        public double Offset;
     }
 
     /// <summary>
@@ -149,7 +155,7 @@ namespace Skunk.Elements
             bool changed = false;
             var newPts = ElementIO.Unflatten(fingerprint);
             bool geometryDiffers = !ElementIO.SamePoints(newPts, current, ctx.Tol) || ElementIO.NormalizeText(TextOf(obj.Geometry)) != ElementIO.NormalizeText(data.Text) ||
-                                   StyleIdOf(obj.Geometry) != StyleIdOf(geometry);
+                                   StyleIdOf(obj.Geometry) != StyleIdOf(geometry) || (kind == ElementKind.SpotSlope && Turned(obj.Geometry, geometry));
             if (geometryDiffers)
             {
                 if (doc.Objects.Replace(obj.Id, geometry, true))
@@ -166,6 +172,13 @@ namespace Skunk.Elements
                 changed = true;
             return changed;
         }
+
+        /// <summary>
+        /// A slope arrow's plane turned (its text belongs on the other side of the arrow) while its points stayed: an arrow in
+        /// a side view moved from above its host line to below it lands where it is drawn, but its text must follow.
+        /// </summary>
+        static bool Turned(GeometryBase was, GeometryBase now) =>
+            was is LinearDimension a && now is LinearDimension b && (a.Plane.YAxis * b.Plane.YAxis < 1 - 1e-9 || a.Plane.ZAxis * b.Plane.ZAxis < 1 - 1e-9);
 
         static bool ApplyTypeAttributes(RhinoDoc doc, RhinoObject obj, SkunkType type)
         {
@@ -223,7 +236,7 @@ namespace Skunk.Elements
             if (type == null)
                 return;
             var dp = dim.Plane;
-            bool onHost = type.Placement == SlopePlacement.OnHost;
+            bool onHost = FollowsHost(type, data);
             // a flat arrow keeps the plane the user turned it into; a host-following one gets its plane from the host
             if (!onHost)
                 data.SetPlane(dp);
@@ -270,7 +283,22 @@ namespace Skunk.Elements
             var topPoint = up ? head : tail;
             var bottomPoint = up ? tail : head;
             var onArrow = topPoint + (bottomPoint - topPoint) * (top / (top + bottom));
-            double offset = DocUnits.PaperToModel(ctx.Doc, type.OffsetFromModelMM);
+            if (PlacedInSideView(data))
+            {
+                // in a side view an arrow moved up or down off its host line stays there (that distance is its offset);
+                // along the line it slides, measuring where it now is
+                if (isCopy)
+                    RehostCopy(ctx, data, onArrow);
+                Anchors.Reanchor(ctx.Doc, data.Anchor, onArrow);
+                var at = Anchors.Evaluate(ctx.Doc, data.Anchor);
+                if (at.Found)
+                {
+                    var now = MeasureSlope(ctx, type, data, at);
+                    data.SlopeOffsetMM = (onArrow - at.Point) * now.Side / DocUnits.PaperToModel(ctx.Doc, 1.0);
+                }
+                return;
+            }
+            double offset = DocUnits.PaperToModel(ctx.Doc, data.SlopeOffsetMM ?? type.OffsetFromModelMM);
             double lift = onHost ? SlopeLift(ctx, type) : 0;
             var location = onArrow - dp.YAxis * offset - dp.ZAxis * lift;
             if (isCopy)
@@ -406,10 +434,10 @@ namespace Skunk.Elements
             var a = new SlopeArrow { Location = s.Point };
             double pointSlope = Anchors.Slope(s, out Vector3d down);
             Vector3d dir, n;
-            bool onHost = t.Placement == SlopePlacement.OnHost;
+            bool onHost = FollowsHost(t, data);
             if (!onHost || !HostPlane(s, down, out dir, out n))
             {
-                // flat in the plane the spot was placed in (the view's CPlane)
+                // flat in the plane the spot was placed in (the view's CPlane; a side view's always)
                 onHost = false;
                 var basePlane = data.AnnotationPlane(s.Point);
                 n = basePlane.ZAxis;
@@ -424,8 +452,9 @@ namespace Skunk.Elements
             var top = s.Point - dir * a.Top;
             var bottom = s.Point + dir * a.Bottom;
 
-            // the ends on the host straight below / above the line's ends, and the slope between them
-            bool measured = Anchors.OnHost(s, top, ctx.Tol, out Point3d topOnHost) & Anchors.OnHost(s, bottom, ctx.Tol, out Point3d bottomOnHost);
+            // the ends on the host straight below / above the line's ends (on a curve: on the piece under the
+            // spot, so a polyline segment's own slope), and the slope between them
+            bool measured = Anchors.SlopeEnd(s, top, ctx.Tol, out Point3d topOnHost) & Anchors.SlopeEnd(s, bottom, ctx.Tol, out Point3d bottomOnHost);
             a.TopEnd = measured ? topOnHost : top;
             a.BottomEnd = measured ? bottomOnHost : bottom;
             var span = a.TopEnd - a.BottomEnd;
@@ -452,13 +481,30 @@ namespace Skunk.Elements
                 if (!y.Unitize())
                     y = Vector3d.YAxis;
             }
-            // just above the host (so it shows in shaded views) and beside its location by the type's offset
-            var shift = y * DocUnits.PaperToModel(ctx.Doc, t.OffsetFromModelMM) + z * (onHost ? SlopeLift(ctx, t) : 0);
+            // just above the host (so it shows in shaded views) and beside its location by its offset (the instance's, else
+            // the type's); in a side view the offset is measured up from the host line, where the arrow is moved up or down
+            bool sideView = PlacedInSideView(data);
+            a.Side = sideView && y * Vector3d.ZAxis < 0 ? -y : y;
+            a.Offset = DocUnits.PaperToModel(ctx.Doc, data.SlopeOffsetMM ?? t.OffsetFromModelMM);
+            var shift = a.Side * a.Offset + z * (onHost ? SlopeLift(ctx, t) : 0);
             a.Tail = tail + shift;
             a.Head = head + shift;
-            a.Plane = new Plane(a.Tail + (a.Head - a.Tail) * 0.5, x, y);
+            // in a side view the text (above the dimension line) stays on the far side of the arrow from the host line; the
+            // style draws text forward, so it reads whichever way the plane faces
+            var planeY = sideView ? (a.Offset >= 0 ? a.Side : -a.Side) : y;
+            a.Plane = new Plane(a.Tail + (a.Head - a.Tail) * 0.5, x, planeY);
             return a;
         }
+
+        /// <summary>
+        /// The spot was placed in a side view: an elevation or a section, whose CPlane is not level (more than about 8°
+        /// off). A slope arrow and its text then lie in that CPlane whatever the type's placement: drawn on the host they
+        /// would lie in a plane the side view sees edge-on (a profile drawn in the elevation, a roof seen from the side).
+        /// </summary>
+        public static bool PlacedInSideView(SpotData data) => Math.Abs(data.AnnotationPlane(Point3d.Origin).ZAxis.Z) < 0.99;
+
+        /// <summary>A slope arrow follows its host: its type says so and it was not placed in a side view.</summary>
+        public static bool FollowsHost(SpotSlopeType t, SpotData data) => t.Placement == SlopePlacement.OnHost && !PlacedInSideView(data);
 
         /// <summary>
         /// The plane a slope arrow lies in when it follows its host: the surface's tangent plane (normal
