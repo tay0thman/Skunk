@@ -5,6 +5,10 @@ you can model with and print.
 
 ## Download and install
 
+**Also available in Rhino's native Package Manager.** In Rhino 9, run `PackageManager`,
+search for **Skunk**, select version **1.6.6**, and click **Install**. Restart Rhino,
+then run `Skunk`.
+
 **[Download Skunk 1.6.6 for Rhino 9 on Windows (.yak)](https://github.com/tay0thman/Skunk/releases/download/v1.6.6/skunk-1.6.6-rh9_0-win.yak)**
 
 The package is publicly downloadable without a GitHub account. See
